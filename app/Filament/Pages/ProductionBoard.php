@@ -15,6 +15,8 @@ use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\Actions\Action as FormAction;
 use Filament\Actions\StaticAction;
 use Filament\Support\Facades\FilamentView;
+use Filament\Support\Enums\ActionSize;
+use Filament\Support\Enums\MaxWidth;
 
 class ProductionBoard extends Page implements HasActions
 {
@@ -32,25 +34,27 @@ class ProductionBoard extends Page implements HasActions
 
     public ?Order $selectedOrder = null;
 
-    public function openProductsPanel(int $orderId): void
+    public function openOrderDetails(int $orderId): void
     {
-        $this->selectedOrder = Order::with(['quote.items.product'])->find($orderId);
-        $this->mountAction('viewProducts');
+        $this->selectedOrder = Order::with([
+            'quote.client',
+            'quote.items.product'
+        ])->find($orderId);
+
+        if (!$this->selectedOrder) {
+            Notification::make()
+                ->danger()
+                ->title('Pedido não encontrado')
+                ->send();
+            return;
+        }
+
+        $this->dispatch('open-modal', id: 'order-details');
     }
 
     protected function getActions(): array
     {
-        return [
-            Action::make('viewProducts')
-                ->slideOver()
-                ->label('Produtos do Pedido')
-                ->modalHeading(fn() => "Produtos do Pedido {$this->selectedOrder?->number}")
-                ->modalContent(fn() => view('filament.pages.partials.products-modal', [
-                    'order' => $this->selectedOrder
-                ]))
-                ->modalWidth('xl')
-                ->hidden(),
-        ];
+        return [];
     }
 
     public function getViewData(): array
@@ -122,9 +126,9 @@ class ProductionBoard extends Page implements HasActions
     public function getStatusColor(string $status): string
     {
         return match ($status) {
-            Order::STATUS_PROCESSING => 'border-amber-500',
-            Order::STATUS_IN_PRODUCTION => 'border-blue-500',
-            Order::STATUS_COMPLETED => 'border-green-500',
+            Order::STATUS_PROCESSING => 'border-primary-500',
+            Order::STATUS_IN_PRODUCTION => 'border-primary-500',
+            Order::STATUS_COMPLETED => 'border-primary-500',
             default => 'border-gray-500',
         };
     }
@@ -134,19 +138,19 @@ class ProductionBoard extends Page implements HasActions
         return match ($status) {
             Order::STATUS_PROCESSING => [
                 'icon' => 'heroicon-o-document-text',
-                'color' => 'text-amber-500'
+                'color' => 'warning'
             ],
             Order::STATUS_IN_PRODUCTION => [
                 'icon' => 'heroicon-o-cog',
-                'color' => 'text-blue-500'
+                'color' => 'primary'
             ],
             Order::STATUS_COMPLETED => [
                 'icon' => 'heroicon-o-check-circle',
-                'color' => 'text-green-500'
+                'color' => 'success'
             ],
             default => [
                 'icon' => 'heroicon-o-document',
-                'color' => 'text-gray-500'
+                'color' => 'gray'
             ],
         };
     }
@@ -154,9 +158,9 @@ class ProductionBoard extends Page implements HasActions
     public function getDropZoneClass(string $status): string
     {
         return match ($status) {
-            Order::STATUS_PROCESSING => 'hover:border-amber-500 hover:bg-amber-50 bg-amber-50/30 border-amber-200',
-            Order::STATUS_IN_PRODUCTION => 'hover:border-blue-500 hover:bg-blue-50 bg-blue-50/30 border-blue-200',
-            Order::STATUS_COMPLETED => 'hover:border-green-500 hover:bg-green-50 bg-green-50/30 border-green-200',
+            Order::STATUS_PROCESSING => 'hover:border-orange-600 hover:bg-orange-50 bg-orange-50/30 border-orange-600',
+            Order::STATUS_IN_PRODUCTION => 'hover:border-blue-600 hover:bg-blue-50 bg-blue-50/30 border-blue-600',
+            Order::STATUS_COMPLETED => 'hover:border-green-600 hover:bg-green-50 bg-green-50/30 border-green-600',
             default => 'hover:border-gray-500 hover:bg-gray-50 bg-gray-50/30 border-gray-200',
         };
     }

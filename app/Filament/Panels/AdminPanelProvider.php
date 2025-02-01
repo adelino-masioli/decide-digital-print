@@ -29,7 +29,13 @@ class AdminPanelProvider extends PanelProvider
             ->path('admin')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
+                'secondary' => Color::Slate,
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
+                'danger' => Color::Red,
+                'info' => Color::Sky,
+                'gray' => Color::Gray,
             ])
             ->navigationGroups([
                 'Administração',

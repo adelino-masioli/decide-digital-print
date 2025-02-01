@@ -3,6 +3,8 @@
 @endphp
 
 <x-filament-panels::page>
+   
+
     <div class="flex flex-col h-[calc(100vh-8rem)]">
         <!-- Cabeçalho -->
         <div class="flex items-center justify-between px-2 mb-4">
@@ -33,24 +35,53 @@
                         <div class="flex items-center gap-2">
                             @php
                                 $iconData = $this->getStatusIcon($status);
+                                $iconColor = match($status) {
+                                    'processing' => 'rgb(251 146 60)',  // orange-400
+                                    'in_production' => 'rgb(96 165 250)',  // blue-400
+                                    'completed' => 'rgb(74 222 128)',  // green-400
+                                    default => 'rgb(156 163 175)'  // gray-400
+                                };
                             @endphp
                             <x-filament::icon
                                 :icon="$iconData['icon']"
-                                @class(["w-4 h-4", $iconData['color']])
+                                class="w-6 h-6"
+                                :style="'color: ' . $iconColor"
                             />
                             <span class="text-sm font-medium">{{ $column['title'] }}</span>
                         </div>
-                        <span class="px-2 py-0.5 text-xs rounded-full bg-gray-100">
+                        <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 dark:bg-gray-800">
                             {{ $column['orders']->count() }}
                         </span>
                     </div>
 
                     <!-- Área de Drop -->
                     <div class="p-2">
+                        @php
+                            $dropZoneColor = match($status) {
+                                'processing' => 'rgb(254 218 189)',  // orange-400
+                                'in_production' => 'rgb(179 214 255)',  // blue-400
+                                'completed' => 'rgb(171 255 202)',  // green-400
+                                default => 'rgb(156 163 175)'  // gray-400
+                            };
+                            
+                            $dropZoneBg = match($status) {
+                                'processing' => 'rgb(255 247 237)',
+                                'in_production' => 'rgb(247 250 255)',
+                                'completed' => 'rgb(247 254 249)',
+                                default => 'rgb(250 251 252)' 
+                            };
+                        @endphp
                         <div 
-                            class="min-h-screen rounded border border-dashed transition-all duration-200 {{ $this->getDropZoneClass($status) }}"
-                            @dragover.prevent="$event.target.classList.add('scale-[1.02]')"
-                            @dragleave="$event.target.classList.remove('scale-[1.02]')"
+                            class="min-h-screen transition-all duration-200 border border-dashed rounded"
+                            style="border-color: {{ $dropZoneColor }}; background-color: {{ $dropZoneBg }};"
+                            @dragover.prevent="
+                                $event.target.classList.add('scale-[1.02]');
+                                $event.target.style.borderColor = '{{ $dropZoneColor }}';
+                                $event.target.style.backgroundColor = '{{ $dropZoneBg }}';
+                            "
+                            @dragleave="
+                                $event.target.classList.remove('scale-[1.02]');
+                            "
                             @drop.prevent="
                                 $event.target.classList.remove('scale-[1.02]');
                                 const orderData = JSON.parse($event.dataTransfer.getData('text/plain'));
@@ -64,7 +95,7 @@
                             <div class="p-2 space-y-2">
                                 @foreach ($column['orders'] as $order)
                                     <div 
-                                        x-data="{ expanded: false }"
+                                        x-data
                                         class="relative p-3 transition-all duration-200 bg-white rounded shadow-sm cursor-move hover:shadow-md group"
                                         draggable="true"
                                         x-init="
@@ -82,67 +113,30 @@
                                             });
                                         "
                                     >
-                                        <!-- Cabeçalho do Card -->
                                         <div class="flex items-center justify-between mb-2">
                                             <div>
                                                 <span class="text-sm font-medium text-primary-600">{{ $order->number }}</span>
                                                 @if($order->payment_status === 'paid')
-                                                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-green-100 text-green-700">
+                                                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-gray-400 dark:bg-gray-600 text-white">
                                                         Pago
                                                     </span>
                                                 @endif
                                             </div>
                                             <button
                                                 type="button"
-                                                @click.prevent="expanded = !expanded"
-                                                class="text-gray-400 hover:text-primary-500"
+                                                x-on:click="$wire.openOrderDetails({{ $order->id }})"
+                                                class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-500"
                                             >
                                                 <x-filament::icon
-                                                    x-bind:icon="expanded ? 'heroicon-m-chevron-up' : 'heroicon-m-chevron-down'"
-                                                    class="w-5 h-5"
+                                                    icon="heroicon-m-eye"
+                                                    class="w-4 h-4"
                                                 />
+                                                Ver detalhes
                                             </button>
                                         </div>
 
                                         <div class="text-sm text-gray-600 truncate">{{ $order->quote->client->name }}</div>
 
-                                        <!-- Conteúdo Expandível -->
-                                        <div
-                                            x-show="expanded"
-                                            x-collapse
-                                            @click.stop
-                                            class="pt-3 mt-3 space-y-3 border-t"
-                                        >
-                                            <table class="w-full text-sm">
-                                                <thead>
-                                                    <tr>
-                                                        <th class="text-left text-gray-600">Produto</th>
-                                                        <th class="text-right text-gray-600">Qtd</th>
-                                                        <th class="text-right text-gray-600">Valor</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    @foreach($order->quote->items as $item)
-                                                        <tr>
-                                                            <td class="py-1">
-                                                                <div class="font-medium">{{ $item->product->name }}</div>
-                                                                @if($item->customizations)
-                                                                    <div class="mt-1 text-xs text-gray-500">
-                                                                        @foreach((array)$item->customizations as $customization)
-                                                                            <div>• {{ $customization }}</div>
-                                                                        @endforeach
-                                                                    </div>
-                                                                @endif
-                                                            </td>
-                                                            <td class="text-right">{{ $item->quantity }}</td>
-                                                            <td class="text-right">R$ {{ number_format($item->unit_price * $item->quantity, 2, ',', '.') }}</td>
-                                                        </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
-
-                                        <!-- Rodapé do Card -->
                                         <div class="flex items-center justify-between mt-2 text-xs">
                                             <span class="text-gray-500">
                                                 {{ $order->updated_at->format('d/m H:i') }}
@@ -170,4 +164,33 @@
             @endforeach
         </div>
     </div>
+
+<!-- Modal de Detalhes -->
+<x-filament::modal
+    id="order-details"
+    :slide-over="true"
+    width="3xl"
+    class="!gap-y-0"
+>
+    <x-slot name="header">
+        @if($selectedOrder)
+            <h2 class="text-lg font-medium">
+                Pedido {{ $selectedOrder->number }}
+            </h2>
+        @endif
+    </x-slot>
+
+    @if($selectedOrder)
+        @include('filament.pages.partials.order-details', ['order' => $selectedOrder])
+    @endif
+
+    <x-slot name="footer">
+        <x-filament::button
+            x-on:click="$dispatch('close-modal', { id: 'order-details' })"
+            color="gray"
+        >
+            Fechar
+        </x-filament::button>
+    </x-slot>
+</x-filament::modal>
 </x-filament-panels::page> 
