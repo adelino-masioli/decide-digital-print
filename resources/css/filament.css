@@ -1,0 +1,71 @@
+.fi-simple-main {
+    @apply sm:max-w-7xl !important;
+}
+
+.fi-simple-page.fi-auth-page .fi-simple-main {
+    @apply max-w-none !important;
+    @apply w-full !important;
+    @apply p-0 !important;
+    @apply m-0 !important;
+    @apply shadow-none !important;
+    @apply bg-transparent !important;
+}
+
+.fi-btn.fi-btn-size-lg {
+    @apply bg-yellow-500 hover:bg-yellow-600 text-black font-bold !important;
+    @apply py-3 !important;
+    @apply mt-8 !important;
+    @apply shadow-none !important;
+}
+
+/* Remove o gradiente e outros estilos padrão do Filament */
+.fi-btn.fi-btn-color-primary {
+    @apply bg-yellow-500 hover:bg-yellow-600 !important;
+    background-image: none !important;
+}
+
+/* Adiciona espaço entre o último item do form e o botão */
+.fi-form-component:last-child {
+    @apply mb-8 !important;
+}
+
+/* Adiciona espaço entre o checkbox e o botão */
+.fi-fo-checkbox-list {
+    @apply mb-8 !important;
+}
+
+/* Ou usando a classe específica do wrapper do checkbox */
+.fi-fo-checkbox {
+    @apply mb-8 !important;
+}
+
+/* Ou podemos tentar com o container do form */
+.fi-form-actions {
+    @apply mt-8 !important;
+}
+
+/* Se precisar ser mais específico */
+.fi-auth-card .fi-fo-checkbox,
+.fi-auth-card .fi-fo-checkbox-list {
+    @apply mb-8 !important;
+}
+
+/* Ajusta o espaçamento do checkbox */
+.fi-form-component-wrap:has(.fi-checkbox) {
+    @apply mb-8 !important;
+}
+
+/* Ou mais específico ainda */
+.fi-form-component-wrap:has(.fi-checkbox) + .fi-form-actions {
+    @apply mt-8 !important;
+}
+
+/* Limpe todos os outros seletores relacionados ao espaçamento e use apenas este */
+.fi-form-component div:has(input[type="checkbox"]) {
+    margin-bottom: 2rem !important;
+}
+
+/* E para o botão */
+.fi-form-actions {
+    margin-top: 2rem !important;
+}

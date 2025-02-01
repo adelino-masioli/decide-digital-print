@@ -1,0 +1,1 @@
+COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf 
