@@ -12,28 +12,55 @@ class Quote extends Model
 
     protected $fillable = [
         'number',
-        'tenant_id',
+        'valid_until',
+        'status',
         'client_id',
         'seller_id',
-        'status',
-        'valid_until',
+        'tenant_id',
         'total_amount',
         'notes',
-        'version_history',
     ];
 
     protected $casts = [
-        'valid_until' => 'date',
+        'valid_until' => 'datetime',
         'total_amount' => 'decimal:2',
-        'version_history' => 'array',
     ];
 
-    // Relacionamentos
-    public function tenant()
+    // Definir as constantes para os status
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_OPEN = 'open';
+    public const STATUS_APPROVED = 'approved';
+    public const STATUS_EXPIRED = 'expired';
+    public const STATUS_CONVERTED = 'converted';
+    public const STATUS_CANCELED = 'canceled';
+
+    // Definir os status possíveis
+    public static function getStatuses(): array
     {
-        return $this->belongsTo(User::class, 'tenant_id');
+        return [
+            self::STATUS_DRAFT,
+            self::STATUS_OPEN,
+            self::STATUS_APPROVED,
+            self::STATUS_EXPIRED,
+            self::STATUS_CONVERTED,
+            self::STATUS_CANCELED,
+        ];
     }
 
+    // Boot do modelo
+    protected static function boot()
+    {
+        parent::boot();
+
+        // Gerar número do orçamento antes de criar
+        static::creating(function ($quote) {
+            if (!$quote->number) {
+                $quote->number = 'ORC-' . str_pad(mt_rand(1, 99999), 5, '0', STR_PAD_LEFT);
+            }
+        });
+    }
+
+    // Relacionamentos
     public function client()
     {
         return $this->belongsTo(User::class, 'client_id');
@@ -42,6 +69,11 @@ class Quote extends Model
     public function seller()
     {
         return $this->belongsTo(User::class, 'seller_id');
+    }
+
+    public function tenant()
+    {
+        return $this->belongsTo(User::class, 'tenant_id');
     }
 
     public function items()
@@ -62,11 +94,11 @@ class Quote extends Model
 
     public function canBeApproved(): bool
     {
-        return in_array($this->status, ['draft', 'open']) && !$this->isExpired();
+        return $this->status === self::STATUS_OPEN && !$this->isExpired();
     }
 
     public function canBeConverted(): bool
     {
-        return $this->status === 'approved' && !$this->order()->exists();
+        return $this->status === self::STATUS_APPROVED && !$this->order()->exists();
     }
 } 

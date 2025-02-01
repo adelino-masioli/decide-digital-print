@@ -90,6 +90,9 @@ return [
                 ],
             ],
         ],
+        'production_board' => [
+            'label' => 'Quadro de Produção',
+        ],
     ],
     'navigation' => [
         'groups' => [
@@ -338,19 +341,31 @@ return [
         ],
         'status' => [
             'quotes' => [
-                'pending' => 'Pendente',
+                'draft' => 'Rascunho',
+                'open' => 'Aberto',
                 'approved' => 'Aprovado',
-                'rejected' => 'Rejeitado',
-                'canceled' => 'Cancelado',
+                'expired' => 'Expirado',
                 'converted' => 'Convertido',
+                'canceled' => 'Cancelado',
             ],
             'orders' => [
                 'pending_payment' => 'Pagamento Pendente',
                 'processing' => 'Em Processamento',
                 'in_production' => 'Em Produção',
                 'completed' => 'Concluído',
-                'delivered' => 'Entregue',
                 'canceled' => 'Cancelado',
+            ],
+            'payment_method' => [
+                'cash' => 'Dinheiro',
+                'credit_card' => 'Cartão de Crédito',
+                'pix' => 'PIX',
+                'bank_slip' => 'Boleto',
+            ],
+            'payment_status' => [
+                'pending' => 'Pendente',
+                'paid' => 'Pago',
+                'failed' => 'Falhou',
+                'refunded' => 'Reembolsado',
             ],
         ],
     ],

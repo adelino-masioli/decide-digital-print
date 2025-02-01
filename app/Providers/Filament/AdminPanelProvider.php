@@ -19,6 +19,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\ProductionBoard;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -35,6 +36,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([
                 Pages\Dashboard::class,
+                ProductionBoard::class,
             ])
             ->middleware([
                 EncryptCookies::class,

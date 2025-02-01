@@ -63,13 +63,15 @@ class QuoteResource extends Resource
                             Forms\Components\Select::make('status')
                                 ->label('Status')
                                 ->options([
-                                    'pending' => trans('filament-panels.resources.status.quotes.pending'),
+                                    'draft' => trans('filament-panels.resources.status.quotes.draft'),
+                                    'open' => trans('filament-panels.resources.status.quotes.open'),
                                     'approved' => trans('filament-panels.resources.status.quotes.approved'),
-                                    'rejected' => trans('filament-panels.resources.status.quotes.rejected'),
+                                    'expired' => trans('filament-panels.resources.status.quotes.expired'),
+                                    'converted' => trans('filament-panels.resources.status.quotes.converted'),
                                     'canceled' => trans('filament-panels.resources.status.quotes.canceled'),
                                 ])
-                                ->default('pending')
-                                ->required()
+                                ->default('draft')
+                                ->required(),
                         ]),
 
                     Forms\Components\Select::make('client_id')
@@ -127,20 +129,22 @@ class QuoteResource extends Resource
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
-                        'warning' => 'pending',
-                        'success' => ['approved', 'converted'],
-                        'danger' => ['rejected', 'canceled'],
+                        'warning' => ['draft', 'open'],
+                        'success' => 'approved',
+                        'danger' => ['expired', 'canceled'],
+                        'primary' => 'converted',
                     ])
                     ->formatStateUsing(fn (string $state): string => trans("filament-panels.resources.status.quotes.{$state}")),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        'pending' => trans('filament-panels.resources.status.quotes.pending'),
+                        'draft' => trans('filament-panels.resources.status.quotes.draft'),
+                        'open' => trans('filament-panels.resources.status.quotes.open'),
                         'approved' => trans('filament-panels.resources.status.quotes.approved'),
-                        'rejected' => trans('filament-panels.resources.status.quotes.rejected'),
-                        'canceled' => trans('filament-panels.resources.status.quotes.canceled'),
+                        'expired' => trans('filament-panels.resources.status.quotes.expired'),
                         'converted' => trans('filament-panels.resources.status.quotes.converted'),
+                        'canceled' => trans('filament-panels.resources.status.quotes.canceled'),
                     ]),
             ])
             ->actions([

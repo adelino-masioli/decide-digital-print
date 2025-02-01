@@ -48,40 +48,34 @@ class OrderResource extends Resource
                             Forms\Components\Select::make('status')
                                 ->label('Status')
                                 ->options([
-                                    Order::STATUS_PENDING_PAYMENT => trans('filament-panels.resources.status.orders.pending_payment'),
-                                    Order::STATUS_PROCESSING => trans('filament-panels.resources.status.orders.processing'),
-                                    Order::STATUS_IN_PRODUCTION => trans('filament-panels.resources.status.orders.in_production'),
-                                    Order::STATUS_COMPLETED => trans('filament-panels.resources.status.orders.completed'),
-                                    Order::STATUS_DELIVERED => trans('filament-panels.resources.status.orders.delivered'),
-                                    Order::STATUS_CANCELED => trans('filament-panels.resources.status.orders.canceled'),
+                                    'pending_payment' => trans('filament-panels.resources.status.orders.pending_payment'),
+                                    'processing' => trans('filament-panels.resources.status.orders.processing'),
+                                    'in_production' => trans('filament-panels.resources.status.orders.in_production'),
+                                    'completed' => trans('filament-panels.resources.status.orders.completed'),
+                                    'canceled' => trans('filament-panels.resources.status.orders.canceled'),
                                 ])
+                                ->default('pending_payment')
                                 ->required(),
 
                             Forms\Components\Select::make('payment_method')
-                                ->label('Forma de Pagamento')
+                                ->label('Método de Pagamento')
                                 ->options([
-                                    'cash' => 'Dinheiro',
-                                    'credit_card' => 'Cartão de Crédito',
-                                    'pix' => 'PIX',
-                                    'bank_slip' => 'Boleto',
+                                    'cash' => trans('filament-panels.resources.status.payment_method.cash'),
+                                    'credit_card' => trans('filament-panels.resources.status.payment_method.credit_card'),
+                                    'pix' => trans('filament-panels.resources.status.payment_method.pix'),
+                                    'bank_slip' => trans('filament-panels.resources.status.payment_method.bank_slip'),
                                 ])
-                                ->required(),
+                                ->nullable(),
 
                             Forms\Components\Select::make('payment_status')
                                 ->label('Status do Pagamento')
                                 ->options([
-                                    Order::PAYMENT_STATUS_PENDING => 'Pendente',
-                                    Order::PAYMENT_STATUS_PAID => 'Pago',
-                                    Order::PAYMENT_STATUS_FAILED => 'Falhou',
-                                    Order::PAYMENT_STATUS_REFUNDED => 'Reembolsado',
+                                    'pending' => trans('filament-panels.resources.status.payment_status.pending'),
+                                    'paid' => trans('filament-panels.resources.status.payment_status.paid'),
+                                    'failed' => trans('filament-panels.resources.status.payment_status.failed'),
+                                    'refunded' => trans('filament-panels.resources.status.payment_status.refunded'),
                                 ])
-                                ->required()
-                                ->live()
-                                ->afterStateUpdated(function ($state, callable $set) {
-                                    if ($state === Order::PAYMENT_STATUS_PAID) {
-                                        $set('status', Order::STATUS_PROCESSING);
-                                    }
-                                }),
+                                ->nullable(),
 
                             Forms\Components\TextInput::make('total_amount')
                                 ->label('Valor Total')
@@ -133,11 +127,11 @@ class OrderResource extends Resource
                 Tables\Columns\BadgeColumn::make('status')
                     ->label('Status')
                     ->colors([
-                        'warning' => [Order::STATUS_PENDING_PAYMENT],
-                        'primary' => Order::STATUS_PROCESSING,
-                        'primary' => Order::STATUS_IN_PRODUCTION,
-                        'success' => [Order::STATUS_COMPLETED, Order::STATUS_DELIVERED],
-                        'danger' => Order::STATUS_CANCELED,
+                        'warning' => ['pending_payment'],
+                        'primary' => 'processing',
+                        'primary' => 'in_production',
+                        'success' => ['completed', 'delivered'],
+                        'danger' => 'canceled',
                     ])
                     ->formatStateUsing(fn (string $state): string => trans("filament-panels.resources.status.orders.{$state}")),
 
@@ -147,7 +141,8 @@ class OrderResource extends Resource
                         'warning' => 'pending',
                         'success' => 'paid',
                         'danger' => ['failed', 'refunded'],
-                    ]),
+                    ])
+                    ->formatStateUsing(fn (string $state): string => trans("filament-panels.resources.status.payment_status.{$state}")),
 
                 Tables\Columns\TextColumn::make('payment_method')
                     ->label('Forma de Pagamento')
@@ -161,12 +156,11 @@ class OrderResource extends Resource
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
-                        Order::STATUS_PENDING_PAYMENT => trans('filament-panels.resources.status.orders.pending_payment'),
-                        Order::STATUS_PROCESSING => trans('filament-panels.resources.status.orders.processing'),
-                        Order::STATUS_IN_PRODUCTION => trans('filament-panels.resources.status.orders.in_production'),
-                        Order::STATUS_COMPLETED => trans('filament-panels.resources.status.orders.completed'),
-                        Order::STATUS_DELIVERED => trans('filament-panels.resources.status.orders.delivered'),
-                        Order::STATUS_CANCELED => trans('filament-panels.resources.status.orders.canceled'),
+                        'pending_payment' => trans('filament-panels.resources.status.orders.pending_payment'),
+                        'processing' => trans('filament-panels.resources.status.orders.processing'),
+                        'in_production' => trans('filament-panels.resources.status.orders.in_production'),
+                        'completed' => trans('filament-panels.resources.status.orders.completed'),
+                        'canceled' => trans('filament-panels.resources.status.orders.canceled'),
                     ]),
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->options([
@@ -177,6 +171,21 @@ class OrderResource extends Resource
                     ]),
             ])
             ->actions([
+                Action::make('markAsPaid')
+                    ->label('Marcar como Pago')
+                    ->icon('heroicon-o-currency-dollar')
+                    ->color('success')
+                    ->requiresConfirmation()
+                    ->visible(fn ($record) => $record->payment_status === 'pending')
+                    ->action(function (Order $record) {
+                        $record->markAsPaid();
+                        
+                        Notification::make()
+                            ->success()
+                            ->title('Pedido marcado como pago!')
+                            ->send();
+                    }),
+
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\ViewAction::make(),
                 Action::make('pdf')

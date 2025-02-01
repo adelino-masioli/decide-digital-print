@@ -85,9 +85,9 @@ class User extends Authenticatable implements FilamentUser
         return $this->is_tenant_admin;
     }
 
-    public function getTenantId(): ?int
+    public function getTenantId()
     {
-        return $this->is_tenant_admin ? $this->id : $this->tenant_id;
+        return $this->tenant_id;
     }
 
     public function isManager(): bool

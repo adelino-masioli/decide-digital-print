@@ -28,20 +28,25 @@ class Order extends Model
         'paid_at' => 'datetime',
     ];
 
-    // Definir as constantes para os status
-    const STATUS_PENDING_PAYMENT = 'pending_payment';
-    const STATUS_PROCESSING = 'processing';
-    const STATUS_IN_PRODUCTION = 'in_production';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_DELIVERED = 'delivered';
-    const STATUS_CANCELED = 'canceled';
+    // Status do Pedido
+    public const STATUS_PENDING_PAYMENT = 'pending_payment';
+    public const STATUS_PROCESSING = 'processing';
+    public const STATUS_IN_PRODUCTION = 'in_production';
+    public const STATUS_COMPLETED = 'completed';
+    public const STATUS_CANCELED = 'canceled';
 
-    const PAYMENT_STATUS_PENDING = 'pending';
-    const PAYMENT_STATUS_PAID = 'paid';
-    const PAYMENT_STATUS_FAILED = 'failed';
-    const PAYMENT_STATUS_REFUNDED = 'refunded';
+    // Métodos de Pagamento
+    public const PAYMENT_METHOD_CASH = 'cash';
+    public const PAYMENT_METHOD_CREDIT_CARD = 'credit_card';
+    public const PAYMENT_METHOD_PIX = 'pix';
+    public const PAYMENT_METHOD_BANK_SLIP = 'bank_slip';
 
-    // Definir os status possíveis
+    // Status do Pagamento
+    public const PAYMENT_STATUS_PENDING = 'pending';
+    public const PAYMENT_STATUS_PAID = 'paid';
+    public const PAYMENT_STATUS_FAILED = 'failed';
+    public const PAYMENT_STATUS_REFUNDED = 'refunded';
+
     public static function getStatuses(): array
     {
         return [
@@ -49,8 +54,17 @@ class Order extends Model
             self::STATUS_PROCESSING,
             self::STATUS_IN_PRODUCTION,
             self::STATUS_COMPLETED,
-            self::STATUS_DELIVERED,
             self::STATUS_CANCELED,
+        ];
+    }
+
+    public static function getPaymentMethods(): array
+    {
+        return [
+            self::PAYMENT_METHOD_CASH,
+            self::PAYMENT_METHOD_CREDIT_CARD,
+            self::PAYMENT_METHOD_PIX,
+            self::PAYMENT_METHOD_BANK_SLIP,
         ];
     }
 
@@ -106,9 +120,9 @@ class Order extends Model
     public function markAsPaid()
     {
         $this->update([
-            'payment_status' => 'paid',
+            'payment_status' => self::PAYMENT_STATUS_PAID,
+            'status' => self::STATUS_PROCESSING,
             'paid_at' => now(),
-            'status' => 'processing'
         ]);
     }
 } 
