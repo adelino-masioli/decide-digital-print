@@ -132,4 +132,19 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->address?->city;
     }
+
+    public function opportunities()
+    {
+        return $this->hasMany(Opportunity::class, 'user_id');
+    }
+
+    public function managedOpportunities()
+    {
+        return $this->hasMany(Opportunity::class, 'responsible_id');
+    }
+
+    public function interactions()
+    {
+        return $this->hasMany(Interaction::class);
+    }
 }

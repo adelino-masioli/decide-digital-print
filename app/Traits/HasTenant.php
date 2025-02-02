@@ -9,10 +9,20 @@ use Illuminate\Support\Facades\Auth;
 
 trait HasTenant
 {
-    public static function bootHasTenant()
+    protected static function bootHasTenant()
     {
-        // Não aplicamos escopo global aqui para evitar loops
-        // O escopo será aplicado diretamente nos modelos que precisam
+        static::creating(function ($model) {
+            if (!$model->tenant_id && auth()->check()) {
+                $model->tenant_id = auth()->user()->tenant_id;
+            }
+        });
+
+        // Aplicar o escopo global apenas se estiver autenticado
+        if (auth()->check()) {
+            static::addGlobalScope('tenant', function (Builder $query) {
+                $query->where('tenant_id', auth()->user()->tenant_id);
+            });
+        }
     }
 
     public function tenant()

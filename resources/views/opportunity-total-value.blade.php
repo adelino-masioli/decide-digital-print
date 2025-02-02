@@ -1,0 +1,1 @@
+<livewire:opportunity-total-value :opportunityId="$opportunityId" /> 

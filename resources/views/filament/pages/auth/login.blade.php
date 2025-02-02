@@ -4,7 +4,7 @@
             {{-- Lado esquerdo (formulário) --}}
             <div class="flex flex-col items-center justify-center w-1/2">
                <div class="flex flex-col items-start justify-center w-1/2">
-                <h2 class="mb-4 text-2xl font-bold text-left text-white">Decide Digital - Print</h2>
+                <h2 class="mb-4 text-2xl font-bold text-left text-gray-900 dark:text-white">Decide Digital - Print</h2>
 
                 <form wire:submit.prevent="authenticate" class="w-full max-w-sm">
                    <div class="flex flex-col pb-4">

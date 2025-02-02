@@ -35,6 +35,7 @@ class Product extends Model
     ];
 
     protected $casts = [
+        'price' => 'decimal:2',
         'customization_options' => 'array',
         'file_requirements' => 'array',
         'is_active' => 'boolean',

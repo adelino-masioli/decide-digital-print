@@ -86,4 +86,10 @@ return [
 
     'livewire_loading_delay' => 'default',
 
+    'widgets' => [
+        App\Filament\Widgets\StatsOverviewWidget::class,
+        App\Filament\Widgets\OpportunitiesChart::class,
+        App\Filament\Widgets\LatestOpportunities::class,
+    ],
+
 ];

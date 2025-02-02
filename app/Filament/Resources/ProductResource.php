@@ -14,6 +14,7 @@ use Illuminate\Database\Eloquent\Model;
 use App\Models\Category;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Repeater;
 
 class ProductResource extends Resource
 {
@@ -186,13 +187,27 @@ class ProductResource extends Resource
                         ->label('Quantidade Máxima')
                         ->numeric(),
 
-                    Forms\Components\TagsInput::make('customization_options')
-                        ->label('Opções de Personalização')
-                        ->placeholder('Adicione as opções'),
+                    Forms\Components\Repeater::make('customization_options')
+                        ->schema([
+                            Forms\Components\TextInput::make('option')
+                                ->label('Opção*')
+                                ->required(),
+                            Forms\Components\TextInput::make('value')
+                                ->label('Valor*')
+                                ->required(),
+                        ])
+                        ->columns(2),
 
-                    Forms\Components\TagsInput::make('file_requirements')
-                        ->label('Requisitos do Arquivo')
-                        ->placeholder('Adicione os requisitos'),
+                    Forms\Components\Repeater::make('file_requirements')
+                        ->schema([
+                            Forms\Components\TextInput::make('requirement')
+                                ->label('Requisito*')
+                                ->required(),
+                            Forms\Components\TextInput::make('specification')
+                                ->label('Especificação*')
+                                ->required(),
+                        ])
+                        ->columns(2),
                 ])->columns(2),
 
             Forms\Components\Section::make('Preços')
