@@ -262,7 +262,7 @@ return [
                 'label' => 'Telefone',
             ],
             'document' => [
-                'label' => 'Documento',
+                'label' => 'Documento(CPF ou CNPJ)',
             ],
             'is_active' => [
                 'label' => 'Ativo',

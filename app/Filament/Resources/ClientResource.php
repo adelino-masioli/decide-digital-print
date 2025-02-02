@@ -15,17 +15,21 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Collection;
 use App\Models\State;
 use App\Models\City;
+use Filament\Support\RawJs;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Validation\Rule;
+
 
 class ClientResource extends Resource
 {
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
-    
+
     protected static ?string $navigationLabel = 'Clientes';
-    
+
     protected static ?string $modelLabel = 'Cliente';
-    
+
     protected static ?string $pluralModelLabel = 'Clientes';
 
     protected static ?string $navigationGroup = 'Administração';
@@ -75,16 +79,31 @@ class ClientResource extends Resource
                                 ->required()
                                 ->maxLength(255),
 
-                            Forms\Components\TextInput::make('document')
-                                ->label('Documento')
+
+                            TextInput::make('document')
+                                ->label('CPF/CNPJ')
                                 ->required()
-                                ->maxLength(14),
+                                ->unique(
+                                    table: 'users',
+                                    column: 'document',
+                                    ignoreRecord: true,
+                                )
+                                ->validationMessages([
+                                    'unique' => 'Este documento já está cadastrado no sistema.',
+                                ])
+                                ->mask(RawJs::make(<<<'JS'
+                                    $input.length > 14 ? '99.999.999/9999-99' : '999.999.999-99'
+                                JS))
+                                ->rule('cpf_ou_cnpj'),
                         ]),
 
                     Forms\Components\Grid::make(3)
                         ->schema([
                             Forms\Components\TextInput::make('phone')
-                                ->label('Telefone')
+                                ->mask(RawJs::make(<<<'JS'
+                                    $input.length >= 14 ? '(99)99999-9999' : '(99)9999-9999'
+                                JS))
+                                ->label(trans('filament-panels.resources.fields.phone.label'))
                                 ->required()
                                 ->tel()
                                 ->maxLength(15),
@@ -97,10 +116,10 @@ class ClientResource extends Resource
 
                             Forms\Components\TextInput::make('password')
                                 ->password()
-                                ->required(fn (string $context): bool => $context === 'create')
+                                ->required(fn(string $context): bool => $context === 'create')
                                 ->dehydrateStateUsing(fn($state) => $state ? Hash::make($state) : null)
                                 ->dehydrated(fn($state) => filled($state))
-                                ->label(fn (string $context): string => $context === 'create' ? 'Senha' : 'Nova Senha (deixe em branco para manter a atual)'),
+                                ->label(fn(string $context): string => $context === 'create' ? 'Senha' : 'Nova Senha (deixe em branco para manter a atual)'),
                         ]),
                 ]),
 
@@ -217,7 +236,7 @@ class ClientResource extends Resource
                 ]),
             ]);
     }
-    
+
     public static function getPages(): array
     {
         return [
@@ -226,4 +245,4 @@ class ClientResource extends Resource
             'edit' => Pages\EditClient::route('/{record}/edit'),
         ];
     }
-} 
+}

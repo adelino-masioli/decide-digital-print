@@ -16,6 +16,9 @@ use Illuminate\Database\Eloquent\Collection;
 use Filament\Navigation\NavigationItem;
 use App\Models\State;
 use App\Models\City;
+use Filament\Support\RawJs;
+use Filament\Forms\Components\TextInput;
+use Illuminate\Validation\Rule;
 
 class UserResource extends Resource
 {
@@ -129,16 +132,30 @@ class UserResource extends Resource
                                 ->label(trans('filament-panels.resources.fields.last_name.label'))
                                 ->required()
                                 ->maxLength(255),
-                            Forms\Components\TextInput::make('document')
-                                ->label(trans('filament-panels.resources.fields.document.label'))
+                            TextInput::make('document')
+                                ->label('CPF/CNPJ')
                                 ->required()
-                                ->maxLength(14)
-                                ->disabled($isOwnProfile && !$user->hasRole(['super-admin', 'tenant-admin'])),
+                                ->unique(
+                                    table: 'users',
+                                    column: 'document',
+                                    ignoreRecord: true,
+                                )
+                                ->validationMessages([
+                                    'unique' => 'Este documento já está cadastrado no sistema.',
+                                ])
+                                ->mask(RawJs::make(<<<'JS'
+                                    $input.length > 14 ? '99.999.999/9999-99' : '999.999.999-99'
+                                JS))
+                                ->rule('cpf_ou_cnpj'),
+
                         ]),
 
                     Forms\Components\Grid::make(3)
                         ->schema([
                             Forms\Components\TextInput::make('phone')
+                                ->mask(RawJs::make(<<<'JS'
+                                    $input.length >= 14 ? '(99)99999-9999' : '(99)9999-9999'
+                                JS))
                                 ->label(trans('filament-panels.resources.fields.phone.label'))
                                 ->required()
                                 ->tel()
