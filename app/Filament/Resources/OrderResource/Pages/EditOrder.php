@@ -6,6 +6,7 @@ use App\Filament\Resources\OrderResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Notifications\Notification;
+use Filament\Notifications\NotificationManager;
 
 class EditOrder extends EditRecord
 {
@@ -39,7 +40,13 @@ class EditOrder extends EditRecord
                 ->visible(fn ($record) => $record->canBeProduced())
                 ->action(function () {
                     $this->record->update(['status' => 'in_production']);
-                    $this->notify('success', 'Pedido enviado para produção!');
+
+                    Notification::make()
+                        ->success()
+                        ->title('Pedido enviado para produção!')
+                        ->send();
+
+                    $this->redirect($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 }),
 
             Actions\Action::make('completeOrder')
@@ -50,7 +57,12 @@ class EditOrder extends EditRecord
                 ->visible(fn ($record) => $record->status === 'in_production')
                 ->action(function () {
                     $this->record->update(['status' => 'completed']);
-                    $this->notify('success', 'Pedido concluído com sucesso!');
+                    Notification::make()
+                        ->success()
+                        ->title('Pedido concluído com sucesso!')
+                        ->send();
+
+                    $this->redirect($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 }),
 
             Actions\DeleteAction::make(),

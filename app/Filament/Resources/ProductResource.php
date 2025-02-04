@@ -143,7 +143,8 @@ class ProductResource extends Resource
                     Forms\Components\FileUpload::make('image')
                         ->label('Imagem')
                         ->image()
-                        ->directory('products')
+                        ->directory('public/products')
+                        ->visibility('public')
                         ->columnSpanFull(),
                 ]),
 
@@ -239,7 +240,10 @@ class ProductResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\ImageColumn::make('image')
-                    ->label('Imagem'),
+                    ->label('Imagem')
+                    ->disk('public')
+                    ->square()
+                    ->size(40),
 
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nome')

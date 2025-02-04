@@ -36,35 +36,57 @@ class SupplyResource extends Resource
         return $form->schema([
             Forms\Components\Section::make('Informações do Insumo')
                 ->schema([
-                    Forms\Components\TextInput::make('name')
-                        ->label('Nome')
-                        ->required()
-                        ->maxLength(255),
-
-                    Forms\Components\Textarea::make('description')
-                        ->label('Descrição')
-                        ->rows(3),
-
-                    Forms\Components\Grid::make(2)
+                    Forms\Components\Grid::make(5)
                         ->schema([
+                            Forms\Components\TextInput::make('name')
+                                ->label('Nome')
+                                ->required()
+                                ->maxLength(255)
+                                ->columnSpan(2),
+
                             Forms\Components\Select::make('supplier_id')
                                 ->label('Fornecedor')
                                 ->relationship(
                                     'supplier',
                                     'name',
-                                    fn (Builder $query) => $user->hasRole('super-admin') 
-                                        ? $query 
+                                    fn(Builder $query) => $user->hasRole('super-admin')
+                                        ? $query
                                         : $query->where('tenant_id', $user->getTenantId())
                                 )
                                 ->searchable()
                                 ->preload()
-                                ->required(),
-
-                            Forms\Components\TextInput::make('unit')
-                                ->label('Unidade')
                                 ->required()
-                                ->maxLength(50),
+                                ->columnSpan(2),
+
+                            Forms\Components\Select::make('unit')
+                                ->label('Unidade')
+                                ->options([
+                                    'UN' => 'Unidade',
+                                    'KG' => 'Quilograma',
+                                    'G' => 'Grama',
+                                    'L' => 'Litro',
+                                    'ML' => 'Mililitro',
+                                    'M' => 'Metro',
+                                    'CM' => 'Centímetro',
+                                    'M²' => 'Metro Quadrado',
+                                    'M³' => 'Metro Cúbico',
+                                    'CX' => 'Caixa',
+                                    'PCT' => 'Pacote',
+                                    'ROL' => 'Rolo',
+                                    'PAR' => 'Par',
+                                    'DZ' => 'Dúzia',
+                                ])
+                                ->required()
+                                ->searchable()
+
                         ]),
+
+
+                    Forms\Components\Textarea::make('description')
+                        ->label('Descrição')
+                        ->rows(3),
+
+
                 ]),
 
             Forms\Components\Section::make('Controle de Estoque')
@@ -171,7 +193,7 @@ class SupplyResource extends Resource
     public static function canEdit(Model $record): bool
     {
         $user = auth()->user();
-        
+
         if ($user->hasRole('super-admin')) {
             return true;
         }
@@ -182,11 +204,11 @@ class SupplyResource extends Resource
     public static function canDelete(Model $record): bool
     {
         $user = auth()->user();
-        
+
         if ($user->hasRole('super-admin')) {
             return true;
         }
 
         return $user->hasRole('tenant-admin') && $record->tenant_id === $user->getTenantId();
     }
-} 
+}

@@ -41,16 +41,17 @@ class SupplierResource extends Resource
                         ->required()
                         ->maxLength(255),
 
-                    Forms\Components\TextInput::make('contact_info')
-                        ->label('Contato')
-                        ->maxLength(255),
-
-                    Forms\Components\Grid::make(2)
+                    Forms\Components\Grid::make(4)
                         ->schema([
+                            Forms\Components\TextInput::make('contact_info')
+                                ->label('Contato')
+                                ->maxLength(255),
+
                             Forms\Components\TextInput::make('email')
                                 ->label('E-mail')
                                 ->email()
-                                ->required(),
+                                ->required()
+                                ->columnSpan(2),
 
                             Forms\Components\TextInput::make('phone')
                                 ->label('Telefone')
@@ -67,21 +68,19 @@ class SupplierResource extends Resource
                             Forms\Components\TextInput::make('postal_code')
                                 ->label('CEP')
                                 ->required()
-                                ->mask('99999-999')
-                                ->columnSpan(2),
+                                ->mask('99999-999'),
 
                             Forms\Components\TextInput::make('address')
                                 ->label('Endereço')
                                 ->required()
-                                ->columnSpan(1),
+                                ->columnSpan(2),
 
                             Forms\Components\TextInput::make('neighborhood')
                                 ->label('Bairro')
-                                ->required()
-                                ->columnSpan(1),
+                                ->required(),
                         ]),
 
-                    Forms\Components\Grid::make(2)
+                    Forms\Components\Grid::make(4)
                         ->schema([
                             Forms\Components\Select::make('state_id')
                                 ->label('Estado')

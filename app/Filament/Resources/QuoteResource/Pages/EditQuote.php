@@ -6,6 +6,8 @@ use App\Filament\Resources\QuoteResource;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
 use App\Models\Order;
+use Filament\Notifications\Notification;
+use Filament\Notifications\NotificationManager;
 
 class EditQuote extends EditRecord
 {
@@ -22,7 +24,12 @@ class EditQuote extends EditRecord
                 ->visible(fn ($record) => $record->canBeApproved())
                 ->action(function () {
                     $this->record->update(['status' => 'approved']);
-                    $this->notify('success', 'Orçamento aprovado com sucesso!');
+                    Notification::make()
+                        ->success()
+                        ->title('Orçamento aprovado com sucesso!')
+                        ->send();
+                    
+                    $this->redirect($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 }),
 
             Actions\Action::make('convert')
@@ -44,7 +51,12 @@ class EditQuote extends EditRecord
                     // Atualiza o status do orçamento
                     $this->record->update(['status' => 'converted']);
 
-                    $this->notify('success', 'Orçamento convertido em pedido com sucesso!');
+                    Notification::make()
+                        ->success()
+                        ->title('Orçamento convertido em pedido com sucesso!')
+                        ->send();
+                    
+                    $this->redirect($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 }),
 
             Actions\Action::make('reactivate')
@@ -58,7 +70,12 @@ class EditQuote extends EditRecord
                         'status' => 'open',
                         'valid_until' => now()->addDays(7),
                     ]);
-                    $this->notify('success', 'Orçamento reativado com sucesso!');
+                    Notification::make()
+                        ->success()
+                        ->title('Orçamento reativado com sucesso!')
+                        ->send();
+                    
+                    $this->redirect($this->getResource()::getUrl('edit', ['record' => $this->record]));
                 }),
 
             Actions\DeleteAction::make(),

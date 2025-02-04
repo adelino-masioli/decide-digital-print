@@ -154,8 +154,9 @@ class QuoteResource extends Resource
                     ->color('success')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->canBeApproved())
-                    ->action(function ($record, $livewire) {
+                    ->after(function (Quote $record) {
                         $record->update(['status' => 'approved']);
+                        
                         Notification::make()
                             ->success()
                             ->title('Orçamento aprovado com sucesso!')
@@ -168,7 +169,7 @@ class QuoteResource extends Resource
                     ->color('primary')
                     ->requiresConfirmation()
                     ->visible(fn($record) => $record->canBeConverted())
-                    ->action(function ($record, $livewire) {
+                    ->after(function (Quote $record) {
                         Order::create([
                             'number' => 'PED-' . str_pad(random_int(1, 99999), 5, '0', STR_PAD_LEFT),
                             'quote_id' => $record->id,
@@ -178,6 +179,7 @@ class QuoteResource extends Resource
                         ]);
 
                         $record->update(['status' => 'converted']);
+                        
                         Notification::make()
                             ->success()
                             ->title('Orçamento convertido em pedido com sucesso!')
