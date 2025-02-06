@@ -24,6 +24,7 @@ use App\Filament\Pages\ProductionBoard;
 use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\OpportunitiesChart;
 use App\Filament\Widgets\LatestOpportunities;
+use App\Filament\Pages\Auth\Login as FilamentLogin;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -33,9 +34,15 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->login()
+            ->login(FilamentLogin::class)
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
+                'secondary' => Color::Slate,
+                'success' => Color::Emerald,
+                'warning' => Color::Orange,
+                'danger' => Color::Red,
+                'info' => Color::Sky,
+                'gray' => Color::Gray,
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

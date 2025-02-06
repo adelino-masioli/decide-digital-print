@@ -1,29 +1,28 @@
-<div>
-    <div class="w-full h-screen">
-        <div class="flex w-full h-full">
-            {{-- Lado esquerdo (formulário) --}}
-            <div class="flex flex-col items-center justify-center w-1/2">
-               <div class="flex flex-col items-start justify-center w-1/2">
-                <h2 class="mb-4 text-2xl font-bold text-left text-gray-900 dark:text-white">Decide Digital - Print</h2>
-
-                <form wire:submit.prevent="authenticate" class="w-full max-w-sm">
-                   <div class="flex flex-col pb-4">
+<div class="container-login">
+    <!-- Seção do formulário -->
+    <div class="form-section">
+        <div class="form-section-content">
+            <h1>Decide Digital - Print</h1>
+            <form wire:key="login-form" wire:submit.prevent="authenticate">
+                <div>
                     {{ $this->form }}
-                   </div>
+                </div>
 
-                    
-                    <x-filament-panels::form.actions 
-                            :actions="$this->getCachedFormActions()"
-                            :full-width="true"
-                        />
-                </form>
-               </div>
-            </div>
-
-            {{-- Lado direito (imagem) --}}
-            <div class="w-1/2 h-full">
-                <img src="{{ asset('images/login-image.webp') }}" class="object-cover w-full h-full">
-            </div>
+                <x-filament-panels::form.actions 
+                    :actions="$this->getCachedFormActions()"
+                    :full-width="true"
+                />
+            </form>
         </div>
     </div>
+
+    <!-- Seção da imagem -->
+    <div class="image-section">
+        <img src="{{ asset('images/login-bg1.webp') }}" alt="Login Background">
+    </div>
 </div>
+
+
+@push('styles')
+    @vite('resources/css/auth.css')
+@endpush

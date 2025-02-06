@@ -1,0 +1,107 @@
+/* Reset básico */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+/* Container principal (full width no desktop) */
+.container-login {
+    display: flex;
+    width: 100vw; /* Força a ocupar toda a largura da tela */
+    height: 100vh;
+    background: linear-gradient(135deg, #f7f7f7, #f1e9d7);
+}
+
+/* Seção da imagem */
+.image-section {
+    flex: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f4f4f4;
+}
+
+.image-section img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+/* Seção do formulário */
+.form-section {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0px;
+    width: 100%;
+}
+.form-section-content {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+    max-width: 400px;
+}
+.form-section-content h1 {
+    margin-bottom: 20px;
+    font-size: 24px;
+    font-weight: 600;
+    color: #333;
+}
+.form-section-content form {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+}
+.form-section-content form div {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    width: 100%;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .container-login {
+        flex-direction: column;
+        align-items: start;
+        width: 100vw;
+        height: 100vh;
+        justify-content: start;
+    }
+
+    .image-section {
+        width: 100%;
+        height: 40vh;
+
+        flex: inherit;
+    }
+
+    .image-section img {
+        width: 100%;
+        height: 100%;
+    }
+
+    .form-section {
+        width: 100%;
+        padding: 20px;
+    }
+
+    .form-section-content {
+        width: 100%;
+    }
+}
