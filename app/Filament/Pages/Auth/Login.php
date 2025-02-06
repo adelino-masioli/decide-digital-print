@@ -80,7 +80,7 @@ class Login extends BaseLogin
     {
         return [
             $this->getAuthenticateFormAction()
-                ->label('Login')
+                ->label('Entrar')
                 ->color('primary')
                 ->size('lg')
                 ->extraAttributes([
@@ -91,11 +91,11 @@ class Login extends BaseLogin
 
     public function getHeading(): Htmlable|string
     {
-        return 'Bem-vindo de volta';
+        return 'Decide Digital - Print 👋';
     }
 
     public function getSubheading(): Htmlable|string
     {
-        return 'Faça login para acessar sua conta';
+        return 'Hoje é o seu dia. Molde-o do seu jeito. <br/> Faça login e comece a gerenciar seus projetos.';
     }
 }

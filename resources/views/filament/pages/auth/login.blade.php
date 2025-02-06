@@ -1,8 +1,8 @@
 <div class="container-login">
     <div class="form-section">
         <div class="form-section-content">
-            <h1>Decide Digital - Print 👋</h1>
-            <p>Hoje é o seu dia. Molde-o do seu jeito. <br/>Faça login e comece a gerenciar seus projetos.</p>
+            <h1>{{ $this->getHeading() }}</h1>
+            <p>{!! $this->getSubheading() !!}</p>
             <form wire:key="login-form" wire:submit.prevent="authenticate">
                 <div>
                     {{ $this->form }}
