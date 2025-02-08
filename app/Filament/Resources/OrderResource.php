@@ -54,6 +54,11 @@ class OrderResource extends Resource
                                     'processing' => trans('filament-panels.resources.status.orders.processing'),
                                     'in_production' => trans('filament-panels.resources.status.orders.in_production'),
                                     'completed' => trans('filament-panels.resources.status.orders.completed'),
+                                    'awaiting_pickup' => trans('filament-panels.resources.status.orders.awaiting_pickup'),
+                                    'in_transit' => trans('filament-panels.resources.status.orders.in_transit'),
+                                    'delivered' => trans('filament-panels.resources.status.orders.delivered'),
+                                    'returned' => trans('filament-panels.resources.status.orders.returned'),
+                                    'finished' => trans('filament-panels.resources.status.orders.finished'),
                                     'canceled' => trans('filament-panels.resources.status.orders.canceled'),
                                 ])
                                 ->default('pending_payment')
@@ -130,10 +135,10 @@ class OrderResource extends Resource
                     ->label('Status')
                     ->colors([
                         'warning' => ['pending_payment'],
-                        'primary' => 'processing',
-                        'primary' => 'in_production',
-                        'success' => ['completed', 'delivered'],
-                        'danger' => 'canceled',
+                        'primary' => ['processing', 'in_production'],
+                        'success' => ['completed', 'delivered', 'finished'],
+                        'info' => ['awaiting_pickup', 'in_transit'],
+                        'danger' => ['canceled', 'returned'],
                     ])
                     ->formatStateUsing(fn (string $state): string => trans("filament-panels.resources.status.orders.{$state}")),
 
@@ -203,6 +208,11 @@ class OrderResource extends Resource
                         'processing' => trans('filament-panels.resources.status.orders.processing'),
                         'in_production' => trans('filament-panels.resources.status.orders.in_production'),
                         'completed' => trans('filament-panels.resources.status.orders.completed'),
+                        'awaiting_pickup' => trans('filament-panels.resources.status.orders.awaiting_pickup'),
+                        'in_transit' => trans('filament-panels.resources.status.orders.in_transit'),
+                        'delivered' => trans('filament-panels.resources.status.orders.delivered'),
+                        'returned' => trans('filament-panels.resources.status.orders.returned'),
+                        'finished' => trans('filament-panels.resources.status.orders.finished'),
                         'canceled' => trans('filament-panels.resources.status.orders.canceled'),
                     ])
                     ->label('Status'),

@@ -19,6 +19,11 @@ return new class extends Migration
                 'processing',
                 'in_production',
                 'completed',
+                'awaiting_pickup',
+                'in_transit',
+                'delivered',
+                'returned',
+                'finished',
                 'canceled'
             ])->default('pending_payment');
             $table->enum('payment_method', [

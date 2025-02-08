@@ -353,6 +353,11 @@ return [
                 'processing' => 'Em Processamento',
                 'in_production' => 'Em Produção',
                 'completed' => 'Concluído',
+                'awaiting_pickup' => 'Aguardando Retirada',
+                'in_transit' => 'Em Trânsito',
+                'delivered' => 'Entregue',
+                'returned' => 'Devolvido',
+                'finished' => 'Finalizado',
                 'canceled' => 'Cancelado',
             ],
             'payment_method' => [
