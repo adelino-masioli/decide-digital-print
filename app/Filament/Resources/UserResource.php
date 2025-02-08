@@ -21,6 +21,7 @@ use Filament\Forms\Components\TextInput;
 use Illuminate\Validation\Rule;
 use App\Filament\Exports\UserExport;
 use Filament\Tables\Actions\ExportAction;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -308,6 +309,7 @@ class UserResource extends Resource
                         ]),
 
                     Forms\Components\Select::make('roles')
+                        ->label('Permissões')
                         ->multiple()
                         ->relationship(
                             'roles',
@@ -320,6 +322,19 @@ class UserResource extends Resource
                             }
                         )
                         ->preload()
+                        ->options(function () {
+                            return Role::query()
+                                ->whereIn('name', ['manager', 'operator', 'client'])
+                                ->pluck('id', 'name')
+                                ->mapWithKeys(function ($id, $name) {
+                                    return [$id => match($name) {
+                                        'manager' => 'Gerente',
+                                        'operator' => 'Operador',
+                                        'client' => 'Cliente',
+                                    }];
+                                })
+                                ->toArray();
+                        })
                         ->searchable()
                         ->disabled(function () use ($user, $record) {
                             if ($record && $record->id === $user->id && $user->is_tenant_admin) {

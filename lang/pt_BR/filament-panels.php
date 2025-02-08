@@ -368,6 +368,13 @@ return [
                 'refunded' => 'Reembolsado',
             ],
         ],
+        'roles' => [
+            'super-admin' => 'Super Administrador',
+            'tenant-admin' => 'Administrador da Gráfica',
+            'manager' => 'Gerente',
+            'operator' => 'Operador',
+            'client' => 'Cliente',
+        ],
     ],
     'common' => [
         'loading' => 'Carregando...',
