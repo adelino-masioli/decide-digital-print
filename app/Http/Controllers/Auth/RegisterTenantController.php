@@ -40,6 +40,7 @@ class RegisterTenantController extends Controller
 
         auth()->login($user);
 
+
         return redirect()->route('filament.admin.pages.dashboard');
     }
 } 

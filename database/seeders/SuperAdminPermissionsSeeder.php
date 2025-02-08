@@ -29,6 +29,9 @@ class SuperAdminPermissionsSeeder extends Seeder
         Permission::firstOrCreate(['name' => 'permission.edit']);
         Permission::firstOrCreate(['name' => 'permission.delete']);
 
+        // Permissão do Dashboard
+        Permission::firstOrCreate(['name' => 'view dashboard']);
+
         // Atribuir todas as permissões ao papel de manager
         $superAdminRole = Role::where('name', 'super-admin')->first();
         
