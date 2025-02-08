@@ -161,7 +161,40 @@ class CategoryResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active'),
+                Tables\Filters\Filter::make('name')
+                    ->label('Nome')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['name'],
+                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('slug')
+                    ->label('Slug')
+                    ->form([
+                        Forms\Components\TextInput::make('slug')
+                            ->label('Slug'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['slug'],
+                            fn (Builder $query, $slug): Builder => $query->where('slug', 'like', "%{$slug}%"),
+                        );
+                    }),
+
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Ativo'),
+
+                Tables\Filters\SelectFilter::make('parent')
+                    ->relationship('parent', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Categoria Pai'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -15,6 +15,8 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\View;
 use Filament\Forms\Get;
 use Filament\Forms\Set;
+use App\Filament\Exports\OpportunityExport;
+use Filament\Tables\Actions\ExportAction;
 
 class OpportunityResource extends Resource
 {
@@ -175,6 +177,14 @@ class OpportunityResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(OpportunityExport::class)
+                    ->disabled(fn () => Opportunity::query()->count() === 0)
             ]);
     }
 

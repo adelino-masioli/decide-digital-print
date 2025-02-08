@@ -19,6 +19,7 @@ class ItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
     protected static ?string $title = 'Itens do Projeto';
+    protected static ?string $createButtonLabel = 'Adicionar item à oportunidade';
 
     public function form(Form $form): Form
     {
@@ -59,6 +60,7 @@ class ItemsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
+                    ->label('Adicionar item à oportunidade')
                     ->modalHeading('Adicionar Produto ao Orçamento')
                     ->modalWidth('3xl')
                     ->after(function () {

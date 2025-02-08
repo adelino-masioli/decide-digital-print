@@ -147,8 +147,46 @@ class SupplyResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                Tables\Filters\Filter::make('name')
+                    ->label('Nome')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['name'],
+                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('stock')
+                    ->label('Estoque')
+                    ->form([
+                        Forms\Components\TextInput::make('min_stock')
+                            ->label('Estoque Mínimo')
+                            ->numeric(),
+                        Forms\Components\TextInput::make('max_stock')
+                            ->label('Estoque Máximo')
+                            ->numeric(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_stock'],
+                                fn (Builder $query, $min): Builder => $query->where('stock', '>=', $min)
+                            )
+                            ->when(
+                                $data['max_stock'],
+                                fn (Builder $query, $max): Builder => $query->where('stock', '<=', $max)
+                            );
+                    }),
+
                 Tables\Filters\SelectFilter::make('supplier')
-                    ->relationship('supplier', 'name'),
+                    ->relationship('supplier', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Fornecedor'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

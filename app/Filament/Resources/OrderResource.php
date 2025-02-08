@@ -156,6 +156,47 @@ class OrderResource extends Resource
                     }),
             ])
             ->filters([
+                Tables\Filters\Filter::make('number')
+                    ->label('Número')
+                    ->form([
+                        Forms\Components\TextInput::make('number')
+                            ->label('Número'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['number'],
+                            fn (Builder $query, $number): Builder => $query->where('number', 'like', "%{$number}%"),
+                        );
+                    }),
+
+                Tables\Filters\SelectFilter::make('client')
+                    ->relationship('quote.client', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Cliente'),
+
+                Tables\Filters\Filter::make('total_amount')
+                    ->label('Valor Total')
+                    ->form([
+                        Forms\Components\TextInput::make('min_amount')
+                            ->label('Valor Mínimo')
+                            ->numeric(),
+                        Forms\Components\TextInput::make('max_amount')
+                            ->label('Valor Máximo')
+                            ->numeric(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_amount'],
+                                fn (Builder $query, $min): Builder => $query->where('total_amount', '>=', $min)
+                            )
+                            ->when(
+                                $data['max_amount'],
+                                fn (Builder $query, $max): Builder => $query->where('total_amount', '<=', $max)
+                            );
+                    }),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'pending_payment' => trans('filament-panels.resources.status.orders.pending_payment'),
@@ -163,14 +204,26 @@ class OrderResource extends Resource
                         'in_production' => trans('filament-panels.resources.status.orders.in_production'),
                         'completed' => trans('filament-panels.resources.status.orders.completed'),
                         'canceled' => trans('filament-panels.resources.status.orders.canceled'),
-                    ]),
+                    ])
+                    ->label('Status'),
+
                 Tables\Filters\SelectFilter::make('payment_status')
                     ->options([
-                        'pending' => 'Pendente',
-                        'paid' => 'Pago',
-                        'failed' => 'Falhou',
-                        'refunded' => 'Reembolsado',
-                    ]),
+                        'pending' => trans('filament-panels.resources.status.payment_status.pending'),
+                        'paid' => trans('filament-panels.resources.status.payment_status.paid'),
+                        'failed' => trans('filament-panels.resources.status.payment_status.failed'),
+                        'refunded' => trans('filament-panels.resources.status.payment_status.refunded'),
+                    ])
+                    ->label('Status do Pagamento'),
+
+                Tables\Filters\SelectFilter::make('payment_method')
+                    ->options([
+                        'cash' => trans('filament-panels.resources.status.payment_method.cash'),
+                        'credit_card' => trans('filament-panels.resources.status.payment_method.credit_card'),
+                        'pix' => trans('filament-panels.resources.status.payment_method.pix'),
+                        'bank_slip' => trans('filament-panels.resources.status.payment_method.bank_slip'),
+                    ])
+                    ->label('Método de Pagamento'),
             ])
             ->actions([
                 Action::make('markAsPaid')

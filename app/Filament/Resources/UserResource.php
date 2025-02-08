@@ -383,7 +383,80 @@ class UserResource extends Resource
         return $table
             ->columns($columns)
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active'),
+     
+                Tables\Filters\Filter::make('document')
+                    ->label('Documento')
+                    ->form([
+                        Forms\Components\TextInput::make('document')
+                            ->label('Documento')
+                            ->mask(RawJs::make(<<<'JS'
+                                $input.length > 14 ? '99.999.999/9999-99' : '999.999.999-99'
+                            JS))
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['document'],
+                            fn (Builder $query, $document): Builder => $query->where('document', 'like', "%{$document}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('name')
+                    ->label('Nome')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['name'],
+                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('last_name')
+                    ->label('Sobrenome')
+                    ->form([
+                        Forms\Components\TextInput::make('last_name')
+                            ->label('Sobrenome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['last_name'],
+                            fn (Builder $query, $lastName): Builder => $query->where('last_name', 'like', "%{$lastName}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('email')
+                    ->label('E-mail')
+                    ->form([
+                        Forms\Components\TextInput::make('email')
+                            ->label('E-mail')
+                            ->email(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['email'],
+                            fn (Builder $query, $email): Builder => $query->where('email', 'like', "%{$email}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('phone')
+                    ->label('Telefone')
+                    ->form([
+                        Forms\Components\TextInput::make('phone')
+                            ->label('Telefone')
+                            ->mask(RawJs::make(<<<'JS'
+                                $input.length >= 14 ? '(99)99999-9999' : '(99)9999-9999'
+                            JS)),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['phone'],
+                            fn (Builder $query, $phone): Builder => $query->where('phone', 'like', "%{$phone}%"),
+                        );
+                    }),
+                    Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Ativo'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

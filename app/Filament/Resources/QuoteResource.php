@@ -139,6 +139,53 @@ class QuoteResource extends Resource
                     ->formatStateUsing(fn (string $state): string => trans("filament-panels.resources.status.quotes.{$state}")),
             ])
             ->filters([
+                Tables\Filters\Filter::make('number')
+                    ->label('Número')
+                    ->form([
+                        Forms\Components\TextInput::make('number')
+                            ->label('Número'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['number'],
+                            fn (Builder $query, $number): Builder => $query->where('number', 'like', "%{$number}%"),
+                        );
+                    }),
+
+                Tables\Filters\SelectFilter::make('client')
+                    ->relationship('client', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Cliente'),
+
+                Tables\Filters\SelectFilter::make('seller')
+                    ->relationship('seller', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Vendedor'),
+
+                Tables\Filters\Filter::make('total_amount')
+                    ->label('Valor Total')
+                    ->form([
+                        Forms\Components\TextInput::make('min_amount')
+                            ->label('Valor Mínimo')
+                            ->numeric(),
+                        Forms\Components\TextInput::make('max_amount')
+                            ->label('Valor Máximo')
+                            ->numeric(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_amount'],
+                                fn (Builder $query, $min): Builder => $query->where('total_amount', '>=', $min)
+                            )
+                            ->when(
+                                $data['max_amount'],
+                                fn (Builder $query, $max): Builder => $query->where('total_amount', '<=', $max)
+                            );
+                    }),
+
                 Tables\Filters\SelectFilter::make('status')
                     ->options([
                         'draft' => trans('filament-panels.resources.status.quotes.draft'),
@@ -147,7 +194,27 @@ class QuoteResource extends Resource
                         'expired' => trans('filament-panels.resources.status.quotes.expired'),
                         'converted' => trans('filament-panels.resources.status.quotes.converted'),
                         'canceled' => trans('filament-panels.resources.status.quotes.canceled'),
-                    ]),
+                    ])
+                    ->label('Status'),
+
+                Tables\Filters\Filter::make('valid_until')
+                    ->form([
+                        Forms\Components\DatePicker::make('valid_from')
+                            ->label('Válido De'),
+                        Forms\Components\DatePicker::make('valid_until')
+                            ->label('Válido Até'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['valid_from'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('valid_until', '>=', $date)
+                            )
+                            ->when(
+                                $data['valid_until'],
+                                fn (Builder $query, $date): Builder => $query->whereDate('valid_until', '<=', $date)
+                            );
+                    }),
             ])
             ->actions([
                 Tables\Actions\Action::make('approve')

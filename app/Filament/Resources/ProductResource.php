@@ -147,7 +147,9 @@ class ProductResource extends Resource
                         ->image()
                         ->directory('public/products')
                         ->visibility('public')
-                        ->columnSpanFull(),
+                        ->columnSpanFull()
+                        ->acceptedFileTypes(['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'])
+                        ->helperText('A imagem deve ser quadrada(800x800px) e ter no máximo 1MB de tamanho em cores RGB. Extensões suportadas: jpg, jpeg, png, gif, webp.'),
                 ]),
 
             Forms\Components\Section::make('Especificações Técnicas')
@@ -191,6 +193,7 @@ class ProductResource extends Resource
                         ->numeric(),
 
                     Forms\Components\Repeater::make('customization_options')
+                        ->label('Opções de Personalização')
                         ->schema([
                             Forms\Components\TextInput::make('option')
                                 ->label('Opção*')
@@ -199,9 +202,11 @@ class ProductResource extends Resource
                                 ->label('Valor*')
                                 ->required(),
                         ])
-                        ->columns(2),
+                        ->columns(2)
+                        ->helperText('Adicione as opções de personalização que o cliente pode escolher para o produto.'),
 
                     Forms\Components\Repeater::make('file_requirements')
+                        ->label('Arquivos Requeridos')
                         ->schema([
                             Forms\Components\TextInput::make('requirement')
                                 ->label('Requisito*')
@@ -210,7 +215,8 @@ class ProductResource extends Resource
                                 ->label('Especificação*')
                                 ->required(),
                         ])
-                        ->columns(2),
+                        ->columns(2)
+                        ->helperText('Adicione os requisitos de arquivos a ser enviado para a produção do produto.'),
                 ])->columns(2),
 
             Forms\Components\Section::make('Preços')
@@ -271,8 +277,64 @@ class ProductResource extends Resource
                     ->boolean(),
             ])
             ->filters([
+                Tables\Filters\Filter::make('sku')
+                    ->label('SKU')
+                    ->form([
+                        Forms\Components\TextInput::make('sku')
+                            ->label('SKU'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['sku'],
+                            fn (Builder $query, $sku): Builder => $query->where('sku', 'like', "%{$sku}%"),
+                        );
+                    }),
+                Tables\Filters\Filter::make('name')
+                    ->label('Nome')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['name'],
+                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                        );
+                    }),
                 Tables\Filters\SelectFilter::make('category')
-                    ->relationship('category', 'name'),
+                    ->relationship('category', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Categoria'),
+
+                Tables\Filters\SelectFilter::make('subcategory')
+                    ->relationship('subcategory', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Subcategoria'),
+
+                Tables\Filters\Filter::make('base_price')
+                    ->label('Preço Base')
+                    ->form([
+                        Forms\Components\TextInput::make('min_price')
+                            ->label('Preço Mínimo')
+                            ->numeric(),
+                        Forms\Components\TextInput::make('max_price')
+                            ->label('Preço Máximo')
+                            ->numeric(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query
+                            ->when(
+                                $data['min_price'],
+                                fn (Builder $query, $min): Builder => $query->where('base_price', '>=', $min)
+                            )
+                            ->when(
+                                $data['max_price'],
+                                fn (Builder $query, $max): Builder => $query->where('base_price', '<=', $max)
+                            );
+                    }),
+
                 Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Ativo'),
             ])

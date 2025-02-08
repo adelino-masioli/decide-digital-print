@@ -21,6 +21,7 @@ class InteractionsRelationManager extends RelationManager
         return $form
             ->schema([
                 Forms\Components\Select::make('type')
+                    ->label('Tipo de Interação')
                     ->options([
                         'call' => 'Ligação',
                         'email' => 'E-mail',
@@ -30,6 +31,7 @@ class InteractionsRelationManager extends RelationManager
                     ->required(),
 
                 Forms\Components\Textarea::make('description')
+                    ->label('Descrição')
                     ->required()
                     ->maxLength(65535)
                     ->columnSpanFull(),
@@ -120,7 +122,8 @@ class InteractionsRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\CreateAction::make()
-                    ->label('Nova Interação'),
+                    ->label('Nova Interação')
+                    ->modalHeading('Adicionar Nova Interação'),
             ])
             ->emptyStateActions([
                 Tables\Actions\CreateAction::make()

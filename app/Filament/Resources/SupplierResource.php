@@ -137,8 +137,58 @@ class SupplierResource extends Resource
                     ->sortable(),
             ])
             ->filters([
+                Tables\Filters\Filter::make('name')
+                    ->label('Nome')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['name'],
+                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('email')
+                    ->label('E-mail')
+                    ->form([
+                        Forms\Components\TextInput::make('email')
+                            ->label('E-mail')
+                            ->email(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['email'],
+                            fn (Builder $query, $email): Builder => $query->where('email', 'like', "%{$email}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('phone')
+                    ->label('Telefone')
+                    ->form([
+                        Forms\Components\TextInput::make('phone')
+                            ->label('Telefone')
+                            ->mask('(99) 99999-9999'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['phone'],
+                            fn (Builder $query, $phone): Builder => $query->where('phone', 'like', "%{$phone}%"),
+                        );
+                    }),
+
                 Tables\Filters\SelectFilter::make('state')
-                    ->relationship('state', 'name'),
+                    ->relationship('state', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Estado'),
+
+                Tables\Filters\SelectFilter::make('city')
+                    ->relationship('city', 'name')
+                    ->searchable()
+                    ->preload()
+                    ->label('Cidade'),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
