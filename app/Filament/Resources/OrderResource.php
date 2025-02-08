@@ -16,6 +16,8 @@ use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OrderMail;
 use Filament\Notifications\Notification;
+use App\Filament\Exports\OrderExport;
+use Filament\Tables\Actions\ExportAction;
 
 class OrderResource extends Resource
 {
@@ -227,6 +229,14 @@ class OrderResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(OrderExport::class)
+                    ->disabled(fn () => Order::query()->count() === 0)
             ]);
     }
 

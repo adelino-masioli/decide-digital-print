@@ -11,6 +11,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use App\Filament\Exports\SupplyExport;
+use Filament\Tables\Actions\ExportAction;
 
 class SupplyResource extends Resource
 {
@@ -156,6 +158,14 @@ class SupplyResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(SupplyExport::class)
+                    ->disabled(fn () => Supply::query()->count() === 0)
             ]);
     }
 

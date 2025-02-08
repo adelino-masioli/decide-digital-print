@@ -10,14 +10,14 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Database\Eloquent\Collection;
 use App\Models\State;
 use App\Models\City;
 use Filament\Support\RawJs;
 use Filament\Forms\Components\TextInput;
-use Illuminate\Validation\Rule;
+use App\Filament\Exports\ClientExport;
+use Filament\Tables\Actions\ExportAction;
+
 
 
 class ClientResource extends Resource
@@ -223,7 +223,79 @@ class ClientResource extends Resource
                     ->boolean(),
             ])
             ->filters([
-                Tables\Filters\TernaryFilter::make('is_active')
+     
+                Tables\Filters\Filter::make('document')
+                    ->label('Documento')
+                    ->form([
+                        Forms\Components\TextInput::make('document')
+                            ->label('Documento')
+                            ->mask(RawJs::make(<<<'JS'
+                                $input.length > 14 ? '99.999.999/9999-99' : '999.999.999-99'
+                            JS))
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['document'],
+                            fn (Builder $query, $document): Builder => $query->where('document', 'like', "%{$document}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('name')
+                    ->label('Nome')
+                    ->form([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['name'],
+                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('last_name')
+                    ->label('Sobrenome')
+                    ->form([
+                        Forms\Components\TextInput::make('last_name')
+                            ->label('Sobrenome'),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['last_name'],
+                            fn (Builder $query, $lastName): Builder => $query->where('last_name', 'like', "%{$lastName}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('email')
+                    ->label('E-mail')
+                    ->form([
+                        Forms\Components\TextInput::make('email')
+                            ->label('E-mail')
+                            ->email(),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['email'],
+                            fn (Builder $query, $email): Builder => $query->where('email', 'like', "%{$email}%"),
+                        );
+                    }),
+
+                Tables\Filters\Filter::make('phone')
+                    ->label('Telefone')
+                    ->form([
+                        Forms\Components\TextInput::make('phone')
+                            ->label('Telefone')
+                            ->mask(RawJs::make(<<<'JS'
+                                $input.length >= 14 ? '(99)99999-9999' : '(99)9999-9999'
+                            JS)),
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['phone'],
+                            fn (Builder $query, $phone): Builder => $query->where('phone', 'like', "%{$phone}%"),
+                        );
+                    }),
+                    Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Ativo'),
             ])
             ->actions([
@@ -234,6 +306,14 @@ class ClientResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(ClientExport::class)
+                    ->disabled(fn () => User::query()->count() === 0)
             ]);
     }
 

@@ -16,6 +16,8 @@ use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Toggle;
 use Illuminate\Support\Str;
+use App\Filament\Exports\CategoryExport;
+use Filament\Tables\Actions\ExportAction;
 
 class CategoryResource extends Resource
 {
@@ -169,6 +171,14 @@ class CategoryResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(CategoryExport::class)
+                    ->disabled(fn () => Category::query()->count() === 0)
             ]);
     }
 

@@ -19,6 +19,8 @@ use Filament\Tables\Actions\Action;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\QuoteMail;
+use App\Filament\Exports\QuoteExport;
+use Filament\Tables\Actions\ExportAction;
 
 class QuoteResource extends Resource
 {
@@ -227,7 +229,15 @@ class QuoteResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ]);
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(QuoteExport::class)
+                    ->disabled(fn () => Quote::query()->count() === 0)
+                ]);
     }
 
     public static function getRelations(): array

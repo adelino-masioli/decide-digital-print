@@ -15,6 +15,8 @@ use App\Models\Category;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Repeater;
+use App\Filament\Exports\ProductExport;
+use Filament\Tables\Actions\ExportAction;
 
 class ProductResource extends Resource
 {
@@ -282,6 +284,14 @@ class ProductResource extends Resource
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(ProductExport::class)
+                    ->disabled(fn () => Product::query()->count() === 0)
             ]);
     }
 

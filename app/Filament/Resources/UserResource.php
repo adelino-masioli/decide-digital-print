@@ -19,6 +19,8 @@ use App\Models\City;
 use Filament\Support\RawJs;
 use Filament\Forms\Components\TextInput;
 use Illuminate\Validation\Rule;
+use App\Filament\Exports\UserExport;
+use Filament\Tables\Actions\ExportAction;
 
 class UserResource extends Resource
 {
@@ -399,6 +401,14 @@ class UserResource extends Resource
                             });
                         }),
                 ]),
+            ])
+            ->headerActions([
+                ExportAction::make()
+                    ->label('Exportar Relatório')
+                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->exporter(UserExport::class)
+                    ->disabled(fn () => User::query()->count() === 0)
             ]);
     }
 
