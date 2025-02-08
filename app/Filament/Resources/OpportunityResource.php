@@ -17,6 +17,7 @@ use Filament\Forms\Get;
 use Filament\Forms\Set;
 use App\Filament\Exports\OpportunityExport;
 use Filament\Tables\Actions\ExportAction;
+use Illuminate\Database\Eloquent\Model;
 
 class OpportunityResource extends Resource
 {
@@ -203,5 +204,25 @@ class OpportunityResource extends Resource
             'create' => Pages\CreateOpportunity::route('/create'),
             'edit' => Pages\EditOpportunity::route('/{record}/edit'),
         ];
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('opportunity.list');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('opportunity.create');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('opportunity.edit');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('opportunity.delete');
     }
 } 

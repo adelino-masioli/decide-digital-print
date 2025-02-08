@@ -30,34 +30,22 @@ class CategoryResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasRole(['super-admin', 'tenant-admin', 'manager']);
+        return auth()->user()->can('category.list');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasRole(['super-admin', 'tenant-admin']);
+        return auth()->user()->can('category.create');
     }
 
     public static function canEdit(Model $record): bool
     {
-        $user = auth()->user();
-        
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
-
-        return $user->hasRole('tenant-admin') && $record->tenant_id === $user->id;
+        return auth()->user()->can('category.edit');
     }
 
     public static function canDelete(Model $record): bool
     {
-        $user = auth()->user();
-        
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
-
-        return $user->hasRole('tenant-admin') && $record->tenant_id === $user->id;
+        return auth()->user()->can('category.delete');
     }
 
     public static function getEloquentQuery(): Builder

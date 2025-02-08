@@ -25,6 +25,7 @@ use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\OpportunitiesChart;
 use App\Filament\Widgets\LatestOpportunities;
 use App\Filament\Pages\Auth\Login as FilamentLogin;
+use \App\Http\Middleware\BlockClientAccess;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -65,6 +66,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                BlockClientAccess::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

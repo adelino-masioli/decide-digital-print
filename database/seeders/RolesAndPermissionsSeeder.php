@@ -15,30 +15,8 @@ class RolesAndPermissionsSeeder extends Seeder
 
         // Create permissions
         $permissions = [
-            // Usuários
             'view_users',
-            'create_users', 
-            'edit_users',
-            'delete_users',
-            
-            // Produtos
             'view_products',
-            'create_products',
-            'edit_products',
-            'delete_products',
-            
-            // Pedidos
-            'view_orders',
-            'create_orders',
-            'edit_orders',
-            'delete_orders',
-            
-            // Financeiro
-            'view_financial',
-            'manage_financial',
-
-            // Configurações
-            'manage_settings',
         ];
 
         foreach ($permissions as $permission) {
@@ -49,36 +27,26 @@ class RolesAndPermissionsSeeder extends Seeder
         $roles = [
             'super-admin' => [
                 'name' => 'Super Admin',
-                'permissions' => ['*'] // Todas as permissões
+                'permissions' => ['view_users'] 
             ],
             'tenant-admin' => [
                 'name' => 'Admin',
-                'permissions' => ['*'] // Todas as permissões dentro do tenant
+                'permissions' => ['view_products']
             ],
             'manager' => [
                 'name' => 'Manager',
-                'permissions' => [
-                    'view_users', 'create_users', 'edit_users', 'delete_users',
-                    'view_products', 'create_products', 'edit_products', 'delete_products',
-                    'view_orders', 'create_orders', 'edit_orders', 'delete_orders',
-                    'manage_settings'
-                    // Não tem acesso ao financeiro
-                ]
+                'permissions' => ['view_products']
             ],
             'operator' => [
                 'name' => 'Operador',
                 'permissions' => [
-                    'view_products', 'edit_products',
-                    'view_orders', 'create_orders', 'edit_orders'
-                    // Não tem acesso ao financeiro nem às configurações
+                    'view_products'
                 ]
             ],
             'client' => [
                 'name' => 'Client',
                 'permissions' => [
-                    'view_products',
-                    'view_orders', 'create_orders'
-                    // Acesso limitado apenas a produtos e seus próprios pedidos
+                    'view_products'
                 ]
             ]
         ];

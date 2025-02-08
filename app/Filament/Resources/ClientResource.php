@@ -17,8 +17,7 @@ use Filament\Support\RawJs;
 use Filament\Forms\Components\TextInput;
 use App\Filament\Exports\ClientExport;
 use Filament\Tables\Actions\ExportAction;
-
-
+use Illuminate\Database\Eloquent\Model;
 
 class ClientResource extends Resource
 {
@@ -36,14 +35,22 @@ class ClientResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return true; // Permite que todos vejam a listagem (será filtrada depois)
+        return auth()->user()->can('client.list');
     }
 
     public static function canCreate(): bool
     {
-        $user = auth()->user();
-        return $user->hasRole('super-admin') ||
-            $user->hasRole('tenant-admin');
+        return auth()->user()->can('client.create');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('client.edit');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('client.delete');
     }
 
     public static function getEloquentQuery(): Builder

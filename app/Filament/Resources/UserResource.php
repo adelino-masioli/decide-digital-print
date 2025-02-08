@@ -22,6 +22,7 @@ use Illuminate\Validation\Rule;
 use App\Filament\Exports\UserExport;
 use Filament\Tables\Actions\ExportAction;
 use Spatie\Permission\Models\Role;
+use Illuminate\Support\Facades\DB;
 
 class UserResource extends Resource
 {
@@ -91,13 +92,18 @@ class UserResource extends Resource
         $user = auth()->user();
 
         if ($user->hasRole('super-admin')) {
-            // Super admin vê todos os usuários
-            return $query->withCount('tenantUsers');
+            return $query->withoutGlobalScopes()
+                ->whereHas('roles', function ($query) {
+                    $query->whereIn('name', ['super-admin', 'tenant-admin']);
+                })
+                ->withCount('tenantUsers');
         }
-
+    
         if ($user->hasRole('tenant-admin')) {
             // Tenant admin vê apenas seus usuários
-            return $query->where('tenant_id', $user->id);
+            return $query->whereHas('roles', function ($query) {
+                $query->whereNotIn('name', ['super-admin', 'tenant-admin']);
+            })->where('tenant_id', $user->id);
         }
 
         // Outros usuários veem apenas seu próprio perfil
@@ -308,7 +314,7 @@ class UserResource extends Resource
                                 ->visible($user->hasRole('super-admin')),
                         ]),
 
-                    Forms\Components\Select::make('roles')
+                    Forms\Components\Select::make('role')
                         ->label('Permissões')
                         ->multiple()
                         ->relationship(
@@ -318,22 +324,39 @@ class UserResource extends Resource
                                 if ($user->hasRole('tenant-admin')) {
                                     return $query->whereIn('name', ['manager', 'operator', 'client']);
                                 }
+                                if ($user->hasRole('super-admin')) {
+                                    return $query->whereIn('name', ['super-admin', 'tenant-admin']);
+                                }
                                 return $query;
                             }
                         )
                         ->preload()
                         ->options(function () {
-                            return Role::query()
-                                ->whereIn('name', ['manager', 'operator', 'client'])
-                                ->pluck('id', 'name')
-                                ->mapWithKeys(function ($id, $name) {
-                                    return [$id => match($name) {
-                                        'manager' => 'Gerente',
-                                        'operator' => 'Operador',
-                                        'client' => 'Cliente',
-                                    }];
-                                })
-                                ->toArray();
+                            // Assumindo que você tem acesso ao usuário autenticado
+                            if (auth()->user()->hasRole('super-admin')) {
+                                return Role::query()
+                                    ->whereIn('name', ['super-admin', 'tenant-admin'])
+                                    ->pluck('id', 'name')
+                                    ->mapWithKeys(function ($id, $name) {
+                                        return [$id => match($name) {
+                                            'super-admin' => 'Super Admin',
+                                            'tenant-admin' => 'Admin da Gráfica'
+                                        }];
+                                    })
+                                    ->toArray();
+                            } else {
+                                return Role::query()
+                                    ->whereIn('name', ['manager', 'operator', 'client'])
+                                    ->pluck('id', 'name')
+                                    ->mapWithKeys(function ($id, $name) {
+                                        return [$id => match($name) {
+                                            'manager' => 'Gerente',
+                                            'operator' => 'Operador',
+                                            'client' => 'Cliente'
+                                        }];
+                                    })
+                                    ->toArray();
+                            }
                         })
                         ->searchable()
                         ->disabled(function () use ($user, $record) {
@@ -350,7 +373,7 @@ class UserResource extends Resource
     public static function table(Table $table): Table
     {
         $user = auth()->user();
-
+        
         $columns = [
             Tables\Columns\TextColumn::make('name')
                 ->label(trans('filament-panels.resources.table.columns.first_name'))
@@ -386,13 +409,28 @@ class UserResource extends Resource
                 ->disabled(function (Model $record) use ($user) {
                     return $record->id === $user->id && $user->is_tenant_admin;
                 }),
+
+            Tables\Columns\TextColumn::make('roles.name')
+                ->label('Tipo de Usuário')
+                ->formatStateUsing(function ($state) {
+                    return match($state) {
+                        'super-admin' => 'Super Admin',
+                        'tenant-admin' => 'Admin da Gráfica',
+                        'manager' => 'Gerente',
+                        'operator' => 'Operador',
+                        'client' => 'Cliente',
+                        default => $state
+                    };
+                })
+                ->visible($user->hasRole('super-admin')),
         ];
 
         // Apenas super admin vê contagem de usuários
         if ($user->hasRole('super-admin')) {
             $columns[] = Tables\Columns\TextColumn::make('tenantUsers_count')
                 ->label('Usuários')
-                ->counts('tenantUsers');
+                ->counts('tenantUsers')
+                ->visible($user->hasRole('super-admin'));
         }
 
         return $table
@@ -472,18 +510,39 @@ class UserResource extends Resource
                     }),
                     Tables\Filters\TernaryFilter::make('is_active')
                     ->label('Ativo'),
+
+                Tables\Filters\SelectFilter::make('role')
+                    ->label('Tipo de Usuário')
+                    ->options([
+                        'super-admin' => 'Super Admin',
+                        'tenant-admin' => 'Admin da Gráfica',
+                        'manager' => 'Gerente',
+                        'operator' => 'Operador',
+                        'client' => 'Cliente',
+                    ])
+                    ->query(function (Builder $query, array $data) {
+                        return $query->when(
+                            $data['value'],
+                            fn (Builder $query, $role): Builder => 
+                                $query->whereHas('roles', fn ($q) => $q->where('name', $role))
+                        );
+                    })
+                    ->visible($user->hasRole('super-admin')),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make()
-                    ->hidden(fn(Model $record) => $record->is_tenant_admin),
+                    ->hidden(fn(Model $record) => 
+                        $record->is_tenant_admin || 
+                        $record->hasRole('super-admin')
+                    )
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make()
                         ->action(function (Collection $records) {
                             $records->each(function ($record) {
-                                if (!$record->is_tenant_admin) {
+                                if (!$record->is_tenant_admin && !$record->hasRole('super-admin')) {
                                     $record->delete();
                                 }
                             });
@@ -519,7 +578,7 @@ class UserResource extends Resource
     public static function getNavigationItems(): array
     {
         $user = auth()->user();
-
+   
         // Se for um usuário comum (não admin), só mostra o link do perfil
         if (!$user->hasRole(['super-admin', 'tenant-admin'])) {
             return [
@@ -532,7 +591,7 @@ class UserResource extends Resource
             ];
         }
 
-        // Para admins, mostra a navegação padrão do resource
+        // Para tenant-admin, mostra a navegação padrão do resource
         return parent::getNavigationItems();
     }
 

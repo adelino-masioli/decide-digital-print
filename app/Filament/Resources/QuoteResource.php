@@ -334,4 +334,24 @@ class QuoteResource extends Resource
 
         return $query->where('tenant_id', $user->getTenantId());
     }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('quote.list');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('quote.create');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('quote.edit');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('quote.delete');
+    }
 }

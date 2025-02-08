@@ -120,7 +120,7 @@ class ProductionBoard extends Page implements HasActions
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasAnyRole(['super-admin', 'tenant-admin', 'manager', 'operator']);
+        return auth()->user()->hasAnyRole(['tenant-admin', 'manager', 'operator']);
     }
 
     public function getStatusColor(string $status): string

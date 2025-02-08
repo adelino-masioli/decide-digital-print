@@ -223,7 +223,7 @@ class SupplierResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole('tenant-admin')) {
             return $query;
         }
 
@@ -232,19 +232,19 @@ class SupplierResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasRole(['super-admin', 'tenant-admin']);
+        return auth()->user()->hasRole(['tenant-admin']);
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasRole(['super-admin', 'tenant-admin']);
+        return auth()->user()->hasRole(['tenant-admin']);
     }
 
     public static function canEdit(Model $record): bool
     {
         $user = auth()->user();
 
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole('tenant-admin')) {
             return true;
         }
 
@@ -255,7 +255,7 @@ class SupplierResource extends Resource
     {
         $user = auth()->user();
 
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole('tenant-admin')) {
             return true;
         }
 

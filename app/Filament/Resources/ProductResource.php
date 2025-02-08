@@ -27,34 +27,27 @@ class ProductResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasRole(['super-admin', 'tenant-admin', 'manager']);
+        return auth()->user()->can('product.list');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasRole(['super-admin', 'tenant-admin', 'manager']);
+        return auth()->user()->can('product.create');
     }
 
     public static function canEdit(Model $record): bool
     {
-        $user = auth()->user();
-        
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
-
-        return ($user->hasRole(['tenant-admin', 'manager']) && $record->tenant_id === $user->getTenantId());
+        return auth()->user()->can('product.edit');
     }
 
     public static function canDelete(Model $record): bool
     {
-        $user = auth()->user();
-        
-        if ($user->hasRole('super-admin')) {
-            return true;
-        }
+        return auth()->user()->can('product.delete');
+    }
 
-        return ($user->hasRole(['tenant-admin', 'manager']) && $record->tenant_id === $user->getTenantId());
+    public static function canView(Model $record): bool
+    {
+        return auth()->user()->can('product.view');
     }
 
     public static function getEloquentQuery(): Builder

@@ -21,6 +21,10 @@ class Login extends BaseLogin
         parent::mount();
 
         $this->form->fill();
+
+        if (session()->has('error')) {
+            $this->addError('data', session('error'));
+        }
     }
 
     public function form(Form $form): Form

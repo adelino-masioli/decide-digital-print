@@ -18,6 +18,7 @@ use App\Mail\OrderMail;
 use Filament\Notifications\Notification;
 use App\Filament\Exports\OrderExport;
 use Filament\Tables\Actions\ExportAction;
+use Illuminate\Database\Eloquent\Model;
 
 class OrderResource extends Resource
 {
@@ -324,10 +325,30 @@ class OrderResource extends Resource
         $query = parent::getEloquentQuery();
         $user = auth()->user();
 
-        if ($user->hasRole('super-admin')) {
+        if ($user->hasRole('tenant-admin')) {
             return $query;
         }
 
         return $query->where('tenant_id', $user->getTenantId());
+    }
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->can('order.list');
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->can('order.create');
+    }
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()->can('order.edit');
+    }
+
+    public static function canDelete(Model $record): bool
+    {
+        return auth()->user()->can('order.delete');
     }
 } 
