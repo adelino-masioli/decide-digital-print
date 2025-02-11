@@ -25,5 +25,8 @@ class AppServiceProvider extends ServiceProvider
 
         // Registra o layout auth como um componente anônimo
         Blade::component('layouts.auth', 'layouts.auth');
+
+        // Register Blade Components
+        Blade::component('layouts.guest', 'guest-layout');
     }
 }

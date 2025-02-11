@@ -13,10 +13,10 @@
                     :full-width="true"
                 />
             </form>
-            <div class="divider">Or</div>
+            <div class="divider">Ou</div>
 
 
-            <p class="signup-text">Você não tem uma conta? <a href="#">Cadastre-se</a></p>
+            <p class="signup-text">Você não tem uma conta? <a href="{{ url('admin/register') }}">Cadastre-se</a></p>
 
             <p class="copyright-text">© {{ date('Y') }} todos os direitos reservados</p>
         </div>

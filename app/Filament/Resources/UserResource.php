@@ -102,7 +102,7 @@ class UserResource extends Resource
         if ($user->hasRole('tenant-admin')) {
             // Tenant admin vê apenas seus usuários
             return $query->whereHas('roles', function ($query) {
-                $query->whereNotIn('name', ['super-admin', 'tenant-admin']);
+                //$query->whereNotIn('name', ['super-admin', 'tenant-admin']);
             })->where('tenant_id', $user->id);
         }
 

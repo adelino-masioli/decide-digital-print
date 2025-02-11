@@ -20,6 +20,7 @@ use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard as FilamentDashboard;
 use App\Filament\Pages\Auth\Login;
+use App\Filament\Pages\Auth\Register;
 use App\Filament\Pages\ProductionBoard;
 use App\Filament\Widgets\StatsOverviewWidget;
 use App\Filament\Widgets\OpportunitiesChart;
@@ -36,6 +37,7 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('admin')
             ->login(FilamentLogin::class)
+            ->registration(Register::class)
             ->colors([
                 'primary' => Color::Blue,
                 'secondary' => Color::Slate,

@@ -27,6 +27,8 @@
                         @if (Route::has('register'))
                             <a href="{{ route('register') }}" class="ml-4 font-semibold text-gray-600 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white focus:outline focus:outline-2 focus:rounded-sm focus:outline-red-500">Register</a>
                         @endif
+
+                        <a href="{{ route('register-tenant') }}" class="ml-4 font-semibold text-indigo-600 hover:text-indigo-700 dark:text-indigo-400 dark:hover:text-indigo-300 focus:outline focus:outline-2 focus:rounded-sm focus:outline-indigo-500">Registrar Gráfica</a>
                     @endauth
                 </div>
             @endif
