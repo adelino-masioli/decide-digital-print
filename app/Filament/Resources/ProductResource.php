@@ -21,8 +21,8 @@ use Filament\Tables\Actions\ExportAction;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-    protected static ?string $navigationIcon = 'heroicon-o-table-cells';
-    protected static ?string $navigationGroup = 'Cadastros';
+    protected static ?string $navigationIcon = 'heroicon-o-cube';
+    protected static ?string $navigationGroup = 'Catálogo';
     protected static ?int $navigationSort = 2;
 
     public static function canViewAny(): bool
@@ -52,14 +52,8 @@ class ProductResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-        $user = auth()->user();
-
-        if ($user->hasRole('super-admin')) {
-            return $query;
-        }
-
-        return $query->where('tenant_id', $user->getTenantId());
+        return parent::getEloquentQuery()
+            ->where('tenant_id', auth()->user()->tenant_id);
     }
 
     public static function getModelLabel(): string
@@ -74,180 +68,144 @@ class ProductResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $user = auth()->user();
+        return $form
+            ->schema([
+                Forms\Components\Section::make('Informações Básicas')
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome')
+                            ->required()
+                            ->maxLength(255)
+                            ->live(onBlur: true),
 
-        return $form->schema([
-            Forms\Components\Section::make('Informações Básicas')
-                ->schema([
-                    Forms\Components\Grid::make(2)
-                        ->schema([
-                            Forms\Components\TextInput::make('name')
-                                ->label(__('filament-panels.resources.fields.name.label'))
-                                ->required()
-                                ->maxLength(255)
-                                ->columnSpan(1),
+                        Forms\Components\TextInput::make('slug')
+                            ->label('Slug')
+                            ->disabled()
+                            ->dehydrated()
+                            ->helperText('Gerado automaticamente do nome'),
 
-                            Forms\Components\TextInput::make('sku')
-                                ->label('SKU')
-                                ->maxLength(255)
-                                ->unique(ignoreRecord: true)
-                                ->columnSpan(1),
-                        ]),
+                        Forms\Components\TextInput::make('sku')
+                            ->label('SKU')
+                            ->disabled()
+                            ->dehydrated()
+                            ->helperText('Gerado automaticamente baseado na categoria'),
 
-                    Forms\Components\Grid::make(2)
-                        ->schema([
-                            Forms\Components\Select::make('category_id')
-                                ->label('Categoria')
-                                ->relationship(
-                                    'category',
-                                    'name',
-                                    fn (Builder $query) => $user->hasRole('super-admin') 
-                                        ? $query->parents() 
-                                        : $query->parents()->where('tenant_id', $user->getTenantId())
-                                )
-                                ->required()
-                                ->live()
-                                ->searchable()
-                                ->preload(),
+                        Forms\Components\Select::make('category_id')
+                            ->label('Categoria')
+                            ->relationship(
+                                'category',
+                                'name',
+                                fn (Builder $query) => $query->where('tenant_id', auth()->user()->tenant_id)
+                                    ->whereNull('parent_id')
+                            )
+                            ->required()
+                            ->live()
+                            ->searchable()
+                            ->preload(),
 
-                            Forms\Components\Select::make('subcategory_id')
-                                ->label('Subcategoria')
-                                ->options(function (callable $get) use ($user) {
-                                    $categoryId = $get('category_id');
-                                    if (!$categoryId) {
-                                        return [];
-                                    }
+                        Forms\Components\Select::make('subcategory_id')
+                            ->label('Subcategoria')
+                            ->relationship(
+                                'subcategory',
+                                'name',
+                                fn (Builder $query, $get) => $query->where('tenant_id', auth()->user()->tenant_id)
+                                    ->where('parent_id', $get('category_id'))
+                            )
+                            ->searchable()
+                            ->preload()
+                            ->visible(fn ($get) => $get('category_id')),
 
-                                    $query = Category::query()->where('parent_id', $categoryId);
-                                    if (!$user->hasRole('super-admin')) {
-                                        $query->where('tenant_id', $user->getTenantId());
-                                    }
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descrição')
+                            ->maxLength(65535)
+                            ->columnSpanFull(),
 
-                                    return $query->pluck('name', 'id')->toArray();
-                                })
-                                ->searchable()
-                                ->preload()
-                                ->disabled(fn (callable $get) => !$get('category_id')),
-                        ]),
+                        Forms\Components\Toggle::make('is_active')
+                            ->label('Ativo')
+                            ->default(true),
+                    ])
+                    ->columns(2),
 
-                    Forms\Components\TextInput::make('keywords')
-                        ->label('Palavras-chave')
-                        ->placeholder('Separadas por vírgula')
-                        ->columnSpanFull(),
+                Forms\Components\Section::make('Especificações')
+                    ->schema([
+                        Forms\Components\TextInput::make('format')
+                            ->label('Formato')
+                            ->maxLength(255),
 
-                    Forms\Components\FileUpload::make('image')
-                        ->label('Imagem')
-                        ->image()
-                        ->directory('public/products')
-                        ->visibility('public')
-                        ->columnSpanFull()
-                        ->acceptedFileTypes(['image/jpg', 'image/jpeg', 'image/png', 'image/gif', 'image/webp'])
-                        ->helperText('A imagem deve ser quadrada(800x800px) e ter no máximo 1MB de tamanho em cores RGB. Extensões suportadas: jpg, jpeg, png, gif, webp.'),
-                ]),
+                        Forms\Components\TextInput::make('material')
+                            ->label('Material')
+                            ->maxLength(255),
 
-            Forms\Components\Section::make('Especificações Técnicas')
-                ->schema([
-                    Forms\Components\TextInput::make('format')
-                        ->label('Formato')
-                        ->maxLength(255),
+                        Forms\Components\TextInput::make('weight')
+                            ->label('Peso')
+                            ->maxLength(255),
 
-                    Forms\Components\TextInput::make('material')
-                        ->label('Material')
-                        ->maxLength(255),
+                        Forms\Components\TextInput::make('finishing')
+                            ->label('Acabamento')
+                            ->maxLength(255),
 
-                    Forms\Components\TextInput::make('weight')
-                        ->label('Gramatura')
-                        ->maxLength(255),
+                        Forms\Components\TextInput::make('color')
+                            ->label('Cor')
+                            ->maxLength(255),
 
-                    Forms\Components\TextInput::make('finishing')
-                        ->label('Acabamento')
-                        ->maxLength(255),
+                        Forms\Components\TextInput::make('production_time')
+                            ->label('Tempo de Produção (dias)')
+                            ->numeric()
+                            ->default(1),
 
-                    Forms\Components\TextInput::make('color')
-                        ->label('Cor')
-                        ->maxLength(255),
+                        Forms\Components\TextInput::make('min_quantity')
+                            ->label('Quantidade Mínima')
+                            ->numeric()
+                            ->default(1),
 
-                    Forms\Components\TextInput::make('production_time')
-                        ->label('Prazo de Produção (dias)')
-                        ->numeric()
-                        ->minValue(1),
-                ])->columns(2),
+                        Forms\Components\TextInput::make('max_quantity')
+                            ->label('Quantidade Máxima')
+                            ->numeric(),
 
-            Forms\Components\Section::make('Opções de Personalização')
-                ->schema([
-                    Forms\Components\TextInput::make('min_quantity')
-                        ->label('Quantidade Mínima')
-                        ->numeric()
-                        ->required()
-                        ->default(1),
+                        Forms\Components\TextInput::make('base_price')
+                            ->label('Preço Base')
+                            ->numeric()
+                            ->prefix('R$')
+                            ->required(),
 
-                    Forms\Components\TextInput::make('max_quantity')
-                        ->label('Quantidade Máxima')
-                        ->numeric(),
+                        Forms\Components\FileUpload::make('image')
+                            ->label('Imagem')
+                            ->image()
+                            ->columnSpanFull(),
+                    ])
+                    ->columns(2),
 
-                    Forms\Components\Repeater::make('customization_options')
-                        ->label('Opções de Personalização')
-                        ->schema([
-                            Forms\Components\TextInput::make('option')
-                                ->label('Opção*')
-                                ->required(),
-                            Forms\Components\TextInput::make('value')
-                                ->label('Valor*')
-                                ->required(),
-                        ])
-                        ->columns(2)
-                        ->helperText('Adicione as opções de personalização que o cliente pode escolher para o produto.'),
+                Forms\Components\Section::make('Personalização')
+                    ->schema([
+                        Forms\Components\KeyValue::make('customization_options')
+                            ->label('Opções de Personalização')
+                            ->keyLabel('Opção')
+                            ->valueLabel('Valores')
+                            ->addable()
+                            ->reorderable(),
 
-                    Forms\Components\Repeater::make('file_requirements')
-                        ->label('Arquivos Requeridos')
-                        ->schema([
-                            Forms\Components\TextInput::make('requirement')
-                                ->label('Requisito*')
-                                ->required(),
-                            Forms\Components\TextInput::make('specification')
-                                ->label('Especificação*')
-                                ->required(),
-                        ])
-                        ->columns(2)
-                        ->helperText('Adicione os requisitos de arquivos a ser enviado para a produção do produto.'),
-                ])->columns(2),
-
-            Forms\Components\Section::make('Preços')
-                ->schema([
-                    Forms\Components\TextInput::make('base_price')
-                        ->label('Preço Base')
-                        ->numeric()
-                        ->prefix('R$')
-                        ->required()
-                ])->columns(2),
-
-            Forms\Components\Section::make('Descrição')
-                ->schema([
-                    Forms\Components\Textarea::make('description')
-                        ->label('Descrição Completa')
-                        ->rows(5)
-                        ->columnSpanFull(),
-                ]),
-
-            
-            Forms\Components\Toggle::make('is_active')
-                ->label('Ativo')
-                ->default(true),
-        ]);
+                        Forms\Components\KeyValue::make('file_requirements')
+                            ->label('Requisitos do Arquivo')
+                            ->keyLabel('Requisito')
+                            ->valueLabel('Especificação')
+                            ->addable()
+                            ->reorderable(),
+                    ])
+                    ->columns(2),
+            ]);
     }
 
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image')
-                    ->label('Imagem')
-                    ->disk('public')
-                    ->square()
-                    ->size(40),
-
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nome')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('sku')
+                    ->label('SKU')
                     ->searchable()
                     ->sortable(),
 
@@ -256,7 +214,8 @@ class ProductResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('sku')
+                Tables\Columns\TextColumn::make('subcategory.name')
+                    ->label('Subcategoria')
                     ->searchable()
                     ->sortable(),
 
@@ -267,69 +226,40 @@ class ProductResource extends Resource
 
                 Tables\Columns\IconColumn::make('is_active')
                     ->label('Ativo')
-                    ->boolean(),
+                    ->boolean()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Criado em')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Atualizado em')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\Filter::make('sku')
-                    ->label('SKU')
-                    ->form([
-                        Forms\Components\TextInput::make('sku')
-                            ->label('SKU'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
-                            $data['sku'],
-                            fn (Builder $query, $sku): Builder => $query->where('sku', 'like', "%{$sku}%"),
-                        );
-                    }),
-                Tables\Filters\Filter::make('name')
-                    ->label('Nome')
-                    ->form([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nome'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
-                            $data['name'],
-                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
-                        );
-                    }),
                 Tables\Filters\SelectFilter::make('category')
+                    ->label('Categoria')
                     ->relationship('category', 'name')
                     ->searchable()
-                    ->preload()
-                    ->label('Categoria'),
+                    ->preload(),
 
                 Tables\Filters\SelectFilter::make('subcategory')
+                    ->label('Subcategoria')
                     ->relationship('subcategory', 'name')
                     ->searchable()
-                    ->preload()
-                    ->label('Subcategoria'),
-
-                Tables\Filters\Filter::make('base_price')
-                    ->label('Preço Base')
-                    ->form([
-                        Forms\Components\TextInput::make('min_price')
-                            ->label('Preço Mínimo')
-                            ->numeric(),
-                        Forms\Components\TextInput::make('max_price')
-                            ->label('Preço Máximo')
-                            ->numeric(),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query
-                            ->when(
-                                $data['min_price'],
-                                fn (Builder $query, $min): Builder => $query->where('base_price', '>=', $min)
-                            )
-                            ->when(
-                                $data['max_price'],
-                                fn (Builder $query, $max): Builder => $query->where('base_price', '<=', $max)
-                            );
-                    }),
+                    ->preload(),
 
                 Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Ativo'),
+                    ->label('Ativo')
+                    ->boolean()
+                    ->trueLabel('Produtos Ativos')
+                    ->falseLabel('Produtos Inativos')
+                    ->native(false),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

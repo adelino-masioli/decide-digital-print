@@ -3,13 +3,16 @@
 namespace App\Models;
 
 use App\Traits\HasTenant;
+use App\Traits\HasUniqueTenantSlug;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Category extends Model
 {
-    use HasFactory, HasTenant;
+    use HasFactory, HasTenant, HasUniqueTenantSlug;
 
     protected $fillable = [
         'name',
@@ -42,14 +45,19 @@ class Category extends Model
     }
 
     // Relacionamentos
-    public function parent()
+    public function parent(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'parent_id');
     }
 
-    public function children()
+    public function children(): HasMany
     {
         return $this->hasMany(Category::class, 'parent_id');
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
     }
 
     // Escopo para categorias principais (sem pai)

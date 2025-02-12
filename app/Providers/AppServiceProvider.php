@@ -9,6 +9,13 @@ use Illuminate\Support\Facades\View;
 use Livewire\Livewire;
 use App\Livewire\WelcomeModal;
 
+use App\Models\User;
+use App\Models\Category;
+use App\Models\Product;
+use App\Observers\UserObserver;
+use App\Observers\CategoryObserver;
+use App\Observers\ProductObserver;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -33,5 +40,10 @@ class AppServiceProvider extends ServiceProvider
         Blade::component('layouts.guest', 'guest-layout');
 
         Livewire::component('welcome-modal', WelcomeModal::class);
+
+        // Register Observers
+        User::observe(UserObserver::class);
+        Category::observe(CategoryObserver::class);
+        Product::observe(ProductObserver::class);
     }
 }

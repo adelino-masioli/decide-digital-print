@@ -23,7 +23,7 @@ class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
-    protected static ?string $navigationGroup = 'Cadastros';
+    protected static ?string $navigationGroup = 'Catálogo';
     protected static ?int $navigationSort = 1;
     protected static ?string $modelLabel = null;
     protected static ?string $pluralModelLabel = null;
@@ -50,14 +50,8 @@ class CategoryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery();
-        $user = auth()->user();
-
-        if ($user->hasRole('super-admin')) {
-            return $query;
-        }
-
-        return $query->where('tenant_id', $user->getTenantId());
+        return parent::getEloquentQuery()
+            ->where('tenant_id', auth()->user()->tenant_id);
     }
 
     public static function getModelLabel(): string
@@ -72,55 +66,43 @@ class CategoryResource extends Resource
 
     public static function form(Form $form): Form
     {
-        $user = auth()->user();
-
         return $form
             ->schema([
-                TextInput::make('name')
-                    ->label(trans('filament-panels.resources.fields.name.label'))
-                    ->required()
-                    ->maxLength(255)
-                    ->live(onBlur: true)
-                    ->afterStateUpdated(fn ($state, callable $set) => 
-                        $set('slug', Str::slug($state))
-                    ),
+                Forms\Components\Section::make()
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nome')
+                            ->required()
+                            ->maxLength(255)
+                            ->live(onBlur: true),
 
-                Select::make('parent_id')
-                    ->label('Categoria Pai')
-                    ->relationship(
-                        'parent',
-                        'name',
-                        function (Builder $query) use ($user) {
-                            if (!$user->hasRole('super-admin')) {
-                                $query->where('tenant_id', $user->getTenantId());
-                            }
-                            return $query;
-                        }
-                    )
-                    ->searchable()
-                    ->preload(),
+                        Forms\Components\TextInput::make('slug')
+                            ->label('Slug')
+                            ->disabled()
+                            ->dehydrated()
+                            ->helperText('Gerado automaticamente do nome'),
 
-               
-                TextInput::make('slug')
-                    ->required()
-                    ->maxLength(255)
-                    ->disabled()
-                    ->unique('categories', 'slug')
-                    ->columnSpanFull(),
+                        Forms\Components\Select::make('parent_id')
+                            ->label('Categoria Pai')
+                            ->relationship(
+                                'parent',
+                                'name',
+                                fn (Builder $query) => $query->where('tenant_id', auth()->user()->tenant_id)
+                                    ->whereNull('parent_id')
+                            )
+                            ->searchable()
+                            ->preload(),
 
-                Textarea::make('description')
-                ->label(trans('filament-panels.resources.fields.description.label'))
-                    ->maxLength(65535)
-                    ->columnSpanFull(),
+                        Forms\Components\Textarea::make('description')
+                            ->label('Descrição')
+                            ->maxLength(65535)
+                            ->columnSpanFull(),
 
-
-                Toggle::make('is_active')
-                    ->label(trans('filament-panels.resources.fields.is_active.label'))
-                    ->default(true),
-
-                TextInput::make('tenant_id')
-                    ->hidden()
-                    ->default(fn () => auth()->user()->getTenantId()),
+                        Forms\Components\Toggle::make('is_active')
+                            ->label('Ativo')
+                            ->default(true),
+                    ])
+                    ->columns(2),
             ]);
     }
 
@@ -129,60 +111,45 @@ class CategoryResource extends Resource
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')
-                ->label(trans('filament-panels.resources.fields.name.label'))
-                    ->searchable(),
+                    ->label('Nome')
+                    ->searchable()
+                    ->sortable(),
 
-                Tables\Columns\TextColumn::make('full_path')
-                    ->label('Caminho Completo')
-                    ->searchable(),
-
-                Tables\Columns\TextColumn::make('slug')
-                    ->searchable(),
+                Tables\Columns\TextColumn::make('parent.name')
+                    ->label('Categoria Pai')
+                    ->searchable()
+                    ->sortable(),
 
                 Tables\Columns\IconColumn::make('is_active')
-                ->label(trans('filament-panels.resources.table.columns.is_active'))
-                    ->boolean(),
+                    ->label('Ativo')
+                    ->boolean()
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Criado em')
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label('Atualizado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\Filter::make('name')
-                    ->label('Nome')
-                    ->form([
-                        Forms\Components\TextInput::make('name')
-                            ->label('Nome'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
-                            $data['name'],
-                            fn (Builder $query, $name): Builder => $query->where('name', 'like', "%{$name}%"),
-                        );
-                    }),
-
-                Tables\Filters\Filter::make('slug')
-                    ->label('Slug')
-                    ->form([
-                        Forms\Components\TextInput::make('slug')
-                            ->label('Slug'),
-                    ])
-                    ->query(function (Builder $query, array $data): Builder {
-                        return $query->when(
-                            $data['slug'],
-                            fn (Builder $query, $slug): Builder => $query->where('slug', 'like', "%{$slug}%"),
-                        );
-                    }),
-
-                Tables\Filters\TernaryFilter::make('is_active')
-                    ->label('Ativo'),
-
                 Tables\Filters\SelectFilter::make('parent')
+                    ->label('Categoria Pai')
                     ->relationship('parent', 'name')
                     ->searchable()
-                    ->preload()
-                    ->label('Categoria Pai'),
+                    ->preload(),
+
+                Tables\Filters\TernaryFilter::make('is_active')
+                    ->label('Ativo')
+                    ->boolean()
+                    ->trueLabel('Categorias Ativas')
+                    ->falseLabel('Categorias Inativas')
+                    ->native(false),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

@@ -3,13 +3,15 @@
 namespace App\Models;
 
 use App\Traits\HasTenant;
+use App\Traits\HasUniqueTenantProductCodes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Product extends Model
 {
-    use HasFactory, HasTenant;
+    use HasFactory, HasTenant, HasUniqueTenantProductCodes;
 
     protected $fillable = [
         'name',
@@ -17,6 +19,7 @@ class Product extends Model
         'description',
         'sku',
         'category_id',
+        'subcategory_id',
         'tenant_id',
         'keywords',
         'format',
@@ -61,17 +64,17 @@ class Product extends Model
     }
 
     // Relacionamentos
-    public function category()
+    public function category(): BelongsTo
     {
-        return $this->belongsTo(Category::class);
+        return $this->belongsTo(Category::class, 'category_id');
     }
 
-    public function subcategory()
+    public function subcategory(): BelongsTo
     {
         return $this->belongsTo(Category::class, 'subcategory_id');
     }
 
-    public function tenant()
+    public function tenant(): BelongsTo
     {
         return $this->belongsTo(User::class, 'tenant_id');
     }

@@ -38,7 +38,11 @@ class AdminSeeder extends Seeder
             'is_tenant_admin' => true,
         ]);
         $tenant1Admin->update(['tenant_id' => $tenant1Admin->id]);
+
         $tenant1Admin->assignRole('tenant-admin');
+
+        // Criar dados iniciais para o tenant
+        $this->call(TenantSeeder::class, false, ['tenantId' => $tenant1Admin->id]);
 
         // Manager da Gráfica A
         User::create([
