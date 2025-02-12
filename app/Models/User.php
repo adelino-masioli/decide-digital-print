@@ -40,6 +40,7 @@ class User extends Authenticatable implements FilamentUser
         'company_latitude',
         'company_longitude',
         'seo_text',
+        'welcome_confirmed_at',
     ];
 
     /**
@@ -62,6 +63,7 @@ class User extends Authenticatable implements FilamentUser
         'password' => 'hashed',
         'is_active' => 'boolean',
         'is_tenant_admin' => 'boolean',
+        'welcome_confirmed_at' => 'datetime',
     ];
 
     public function canAccessPanel(Panel $panel): bool

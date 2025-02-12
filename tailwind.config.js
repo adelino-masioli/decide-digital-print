@@ -23,6 +23,15 @@ module.exports = {
         'bg-blue-50/30',
         'bg-green-50/30',
         'bg-gray-50/30',
+        'bg-opacity-10',
     ],
     // ... resto das configurações
+    theme: {
+        extend: {
+            opacity: {
+                '10': '0.1',
+                '90': '0.9',
+            }
+        }
+    }
 } 

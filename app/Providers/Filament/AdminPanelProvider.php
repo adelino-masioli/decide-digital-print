@@ -27,6 +27,7 @@ use App\Filament\Widgets\OpportunitiesChart;
 use App\Filament\Widgets\LatestOpportunities;
 use App\Filament\Pages\Auth\Login as FilamentLogin;
 use \App\Http\Middleware\BlockClientAccess;
+use Illuminate\Support\Facades\Blade;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -74,6 +75,10 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
             ->maxContentWidth('full')
-            ->sidebarCollapsibleOnDesktop();
+            ->sidebarCollapsibleOnDesktop()
+            ->renderHook(
+                'panels::body.end',
+                fn () => view('components.welcome-modal')
+            );
     }
 }

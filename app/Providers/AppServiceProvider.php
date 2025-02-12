@@ -6,6 +6,9 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\View;
 
+use Livewire\Livewire;
+use App\Livewire\WelcomeModal;
+
 class AppServiceProvider extends ServiceProvider
 {
     /**
@@ -28,5 +31,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Register Blade Components
         Blade::component('layouts.guest', 'guest-layout');
+
+        Livewire::component('welcome-modal', WelcomeModal::class);
     }
 }
