@@ -320,7 +320,7 @@ class ClientResource extends Resource
                     ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
                     ->icon('heroicon-o-document-arrow-down')
                     ->exporter(ClientExport::class)
-                    ->disabled(fn () => User::query()->count() === 0)
+                    ->disabled(fn () => User::query()->role('client')->count() === 0)
             ]);
     }
 

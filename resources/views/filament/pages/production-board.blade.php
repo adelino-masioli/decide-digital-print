@@ -8,8 +8,8 @@
     <div class="flex flex-col h-[calc(100vh-8rem)]">
         <!-- Cabeçalho -->
         <div class="flex items-center justify-between px-2 mb-4">
-            <div class="flex items-center gap-4">
-                <h2 class="text-lg font-bold">Quadro de Produção</h2>
+            <div class="flex items-center gap-2">
+                <h2 class="text-lg font-bold">Pedidos na fila:</h2>
                 <span class="text-sm text-gray-500">
                     {{ $columns['processing']['orders']->count() + $columns['in_production']['orders']->count() + $columns['completed']['orders']->count() }} pedidos
                 </span>
