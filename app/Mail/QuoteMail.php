@@ -5,40 +5,40 @@ namespace App\Mail;
 use App\Models\Quote;
 use Illuminate\Bus\Queueable;
 use Illuminate\Mail\Mailable;
-use Illuminate\Mail\Mailables\Content;
-use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Arr;
+use MailerSend\Helpers\Builder\Personalization;
+use MailerSend\LaravelDriver\MailerSendTrait;
 use Illuminate\Mail\Mailables\Attachment;
 
 class QuoteMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, MailerSendTrait;
 
     public function __construct(
         public Quote $quote,
         public string $pdfPath
     ) {}
 
-    public function envelope(): Envelope
+    public function build()
     {
-        return new Envelope(
-            subject: "Orçamento #{$this->quote->id}",
-        );
-    }
+        $to = Arr::get($this->to, '0.address');
 
-    public function content(): Content
-    {
-        return new Content(
-            view: 'mail.quote',
-        );
+        return $this
+            ->view('mail.quote')
+            ->attach(Attachment::fromPath($this->pdfPath)
+                ->as("orcamento_{$this->quote->id}.pdf")
+                ->withMime('application/pdf'))
+            ->mailersend(
+                template_id: null, 
+                tags: ['quote'],
+                personalization: [
+                    new Personalization($to, [
+                        'quote_id' => $this->quote->id,
+                        'customer_name' => $this->quote->customer->name ?? 'Cliente',
+                        'total_price' => number_format($this->quote->total, 2, ',', '.')
+                    ])
+                ]
+            );
     }
-
-    public function attachments(): array
-    {
-        return [
-            Attachment::fromPath($this->pdfPath)
-                     ->as("orcamento_{$this->quote->id}.pdf")
-                     ->withMime('application/pdf'),
-        ];
-    }
-} 
+}

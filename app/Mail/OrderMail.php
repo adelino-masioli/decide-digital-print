@@ -9,10 +9,12 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Mail\Mailables\Attachment;
+use MailerSend\LaravelDriver\MailerSendTrait;
+use MailerSend\Helpers\Builder\Personalization;
 
 class OrderMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use Queueable, SerializesModels, MailerSendTrait;
 
     public function __construct(
         public Order $order,
@@ -41,4 +43,28 @@ class OrderMail extends Mailable
                      ->withMime('application/pdf'),
         ];
     }
-} 
+
+    public function build()
+    {
+        $to = Arr::get($this->to, '0.address'); // Obtém o destinatário
+
+        return $this
+            ->view('mail.order') // Define a view do email
+            ->attach($this->pdfPath, [
+                'as' => "pedido_{$this->order->id}.pdf",
+                'mime' => 'application/pdf',
+            ])
+            ->mailersend(
+                template_id: null, // Se tiver um template do MailerSend, pode definir aqui
+                tags: ['order', 'purchase'],
+                personalization: [
+                    new Personalization($to, [
+                        'order_id' => $this->order->id,
+                        'customer_name' => $this->order->customer_name,
+                        'total' => number_format($this->order->total, 2, ',', '.'),
+                    ])
+                ],
+                precedenceBulkHeader: true
+            );
+    }
+}
