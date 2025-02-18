@@ -1,1 +1,3 @@
-<livewire:welcome-modal />
+<div>
+    <livewire:welcome-modal />
+</div>
