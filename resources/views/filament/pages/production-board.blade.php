@@ -4,19 +4,17 @@
 @endphp
 
 <x-filament-panels::page>
-   
-
-    <div class="flex flex-col h-[calc(100vh-8rem)]">
+    <div class="flex flex-col">
         <!-- Cabeçalho -->
-        <div class="flex items-center justify-between px-2 mb-4">
-            <div class="flex items-center gap-2">
+        <div class="flex justify-between items-center px-2 mb-4">
+            <div class="flex gap-2 items-center">
                 <h2 class="text-lg font-bold">Pedidos na fila:</h2>
                 <span class="text-sm text-gray-500">
                     {{ $columns['processing']['orders']->count() + $columns['in_production']['orders']->count() + $columns['completed']['orders']->count() }} pedidos
                 </span>
             </div>
             
-            <div class="flex items-center gap-2">
+            <div class="flex gap-2 items-center">
                 <x-filament::input.wrapper>
                     <x-filament::input 
                         type="search"
@@ -28,12 +26,12 @@
         </div>
 
         <!-- Colunas do Kanban -->
-        <div class="flex gap-4 pb-4 overflow-x-auto">
+        <div class="flex overflow-x-auto gap-4 pb-4">
             @foreach ($columns as $status => $column)
                 <div class="flex-1 min-w-[320px] bg-gray-50/80 rounded-lg">
                     <!-- Cabeçalho da Coluna -->
-                    <div class="flex items-center justify-between p-3">
-                        <div class="flex items-center gap-2">
+                    <div class="flex justify-between items-center p-3">
+                        <div class="flex gap-2 items-center">
                             @php
                                 $iconData = $this->getStatusIcon($status);
                                 $iconColor = match($status) {
@@ -50,7 +48,7 @@
                             />
                             <span class="text-sm font-medium">{{ $column['title'] }}</span>
                         </div>
-                        <span class="px-2 py-0.5 text-xs rounded-full bg-gray-200 dark:bg-gray-800">
+                        <span class="px-2 py-0.5 text-xs bg-gray-200 rounded-full dark:bg-gray-800">
                             {{ $column['orders']->count() }}
                         </span>
                     </div>
@@ -73,7 +71,7 @@
                             };
                         @endphp
                         <div 
-                            class="min-h-screen transition-all duration-200 border border-dashed rounded"
+                            class="min-h-screen rounded border border-dashed transition-all duration-200"
                             style="border-color: {{ $dropZoneColor }}; background-color: {{ $dropZoneBg }};"
                             @dragover.prevent="
                                 $event.target.classList.add('scale-[1.02]');
@@ -97,7 +95,7 @@
                                 @foreach ($column['orders'] as $order)
                                     <div 
                                         x-data
-                                        class="relative p-3 transition-all duration-200 bg-white rounded shadow-sm cursor-move hover:shadow-md group"
+                                        class="relative p-3 bg-white rounded shadow-sm transition-all duration-200 cursor-move hover:shadow-md group"
                                         draggable="true"
                                         x-init="
                                             $el.addEventListener('dragstart', (e) => {
@@ -114,11 +112,11 @@
                                             });
                                         "
                                     >
-                                        <div class="flex items-center justify-between mb-2">
+                                        <div class="flex justify-between items-center mb-2">
                                             <div>
                                                 <span class="text-sm font-medium text-primary-600">{{ $order->number }}</span>
                                                 @if($order->payment_status === 'paid')
-                                                    <span class="px-1.5 py-0.5 text-xs rounded-full bg-gray-400 dark:bg-gray-600 text-white">
+                                                    <span class="px-1.5 py-0.5 text-xs text-white bg-gray-400 rounded-full dark:bg-gray-600">
                                                         Pago
                                                     </span>
                                                 @endif
@@ -126,7 +124,7 @@
                                             <button
                                                 type="button"
                                                 x-on:click="$wire.openOrderDetails({{ $order->id }})"
-                                                class="inline-flex items-center gap-1 text-sm text-primary-600 hover:text-primary-500"
+                                                class="inline-flex gap-1 items-center text-sm text-primary-600 hover:text-primary-500"
                                             >
                                                 <x-filament::icon
                                                     icon="heroicon-m-eye"
@@ -138,7 +136,7 @@
 
                                         <div class="text-sm text-gray-600 truncate">{{ $order->quote->client->name }}</div>
 
-                                        <div class="flex items-center justify-between mt-2 text-xs">
+                                        <div class="flex justify-between items-center mt-2 text-xs">
                                             <span class="text-gray-500">
                                                 {{ $order->updated_at->format('d/m H:i') }}
                                             </span>
@@ -150,10 +148,10 @@
                                 @endforeach
 
                                 @if($column['orders']->isEmpty())
-                                    <div class="flex flex-col items-center justify-center h-32 text-sm text-gray-500">
+                                    <div class="flex flex-col justify-center items-center h-32 text-sm text-gray-500">
                                         <x-filament::icon
                                             icon="heroicon-o-arrow-down"
-                                            class="w-5 h-5 mb-2 animate-bounce"
+                                            class="mb-2 w-5 h-5 animate-bounce"
                                         />
                                         {{ $this->getDropZoneText($status) }}
                                     </div>

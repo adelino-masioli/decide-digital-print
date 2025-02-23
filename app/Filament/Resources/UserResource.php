@@ -23,6 +23,7 @@ use App\Filament\Exports\UserExport;
 use Filament\Tables\Actions\ExportAction;
 use Spatie\Permission\Models\Role;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Http;
 
 class UserResource extends Resource
 {
@@ -43,7 +44,7 @@ class UserResource extends Resource
     {
         $user = auth()->user();
         return $user->hasRole('super-admin') ||
-            $user->hasRole('tenant-admin');
+            $user->hasRole('tenant-admin') || $user->hasRole('manager');
     }
 
     public static function canEdit(Model $record): bool
@@ -59,6 +60,15 @@ class UserResource extends Resource
         if ($user->hasRole('tenant-admin') && $record->tenant_id === $user->id) {
             return true;
         }
+
+        if ($user->hasRole('manager') && $record->tenant_id === $user->tenant_id) {
+            return true;
+        }
+
+        if ($user->hasRole('manager') && $record->is_tenant_admin === false) {
+            return true;
+        }
+        
 
         // Outros usuários só podem editar seu próprio perfil
         return $user->id === $record->id;
@@ -83,6 +93,14 @@ class UserResource extends Resource
             return true;
         }
 
+        if ($user->hasRole('manager') && $record->tenant_id === $user->tenant_id) {
+            return true;
+        }
+
+        if ($user->hasRole('manager') && $record->is_tenant_admin === false) {
+            return true;
+        }
+
         return false;
     }
 
@@ -104,6 +122,13 @@ class UserResource extends Resource
             return $query->whereHas('roles', function ($query) {
                 //$query->whereNotIn('name', ['super-admin', 'tenant-admin']);
             })->where('tenant_id', $user->id);
+        }
+
+        if ($user->hasRole('manager')) {
+            // Tenant admin vê apenas seus usuários
+            return $query->whereHas('roles', function ($query) {
+                $query->whereNotIn('name', ['super-admin', 'tenant-admin']);
+            })->where('tenant_id', $user->tenant_id);
         }
 
         // Outros usuários veem apenas seu próprio perfil
@@ -195,8 +220,37 @@ class UserResource extends Resource
                             Forms\Components\TextInput::make('zip_code')
                                 ->label('CEP')
                                 ->required()
-                                ->mask('99999-999'),
-
+                                ->mask('99999-999')
+                                ->live()
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    if (empty($state)) return;
+                                    
+                                    $cep = preg_replace('/[^0-9]/', '', $state);
+                                    if (strlen($cep) !== 8) return;
+                                    
+                                    $response = Http::get("https://viacep.com.br/ws/{$cep}/json/")->json();
+                                    
+                                    if (!isset($response['erro'])) {
+                                        $set('street', $response['logradouro']);
+                                        $set('neighborhood', $response['bairro']);
+                                        $set('complement', $response['complemento']);
+                                    
+                                        // Find state and city
+                                        $state = State::where('uf', $response['uf'])->first();
+                                        if ($state) {
+                                            $set('state_id', $state->id);
+                                            
+                                            $city = City::where('state_id', $state->id)
+                                                ->where('name', $response['localidade'])
+                                                ->first();
+                                                
+                                            if ($city) {
+                                                $set('city_id', $city->id);
+                                            }
+                                        }
+                                    }
+                                }),
+                        
                             Forms\Components\TextInput::make('street')
                                 ->label('Rua')
                                 ->required(),
@@ -580,7 +634,7 @@ class UserResource extends Resource
         $user = auth()->user();
    
         // Se for um usuário comum (não admin), só mostra o link do perfil
-        if (!$user->hasRole(['super-admin', 'tenant-admin'])) {
+        if (!$user->hasRole(['super-admin', 'tenant-admin', 'manager'])) {
             return [
                 NavigationItem::make('Meu Perfil')
                     ->icon('heroicon-o-user')
@@ -600,7 +654,7 @@ class UserResource extends Resource
         $user = auth()->user();
 
         // Super admin e tenant admin podem ver qualquer usuário
-        if ($user->hasRole(['super-admin', 'tenant-admin'])) {
+        if ($user->hasRole(['super-admin', 'tenant-admin', 'manager'])) {
             return true;
         }
 

@@ -18,6 +18,7 @@ use Filament\Forms\Components\TextInput;
 use App\Filament\Exports\ClientExport;
 use Filament\Tables\Actions\ExportAction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Http;
 
 class ClientResource extends Resource
 {
