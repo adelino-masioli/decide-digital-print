@@ -306,11 +306,15 @@ class QuoteResource extends Resource
                             ->label('Exportar Relatório')
                             ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
                             ->icon('heroicon-o-document-arrow-down')
-                            ->exporter(OpportunityExport::class)
-                            ->disabled(fn () => Quote::query()->count() === 0)
+                            ->exporter(QuoteExport::class)
+                            ->disabled(function () {
+                                $user = auth()->user();
+                                return Quote::query()
+                                    ->where('tenant_id', $user->getTenantId())
+                                    ->count() === 0;
+                            })
                     ]
                     : []
-            
             );
     }
 
