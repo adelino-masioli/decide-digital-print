@@ -23,7 +23,7 @@ class ProductResource extends Resource
     protected static ?string $model = Product::class;
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?string $navigationGroup = 'Catálogo';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool
     {
@@ -265,19 +265,26 @@ class ProductResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ])
-            ->headerActions([
-                ExportAction::make()
-                    ->label('Exportar Relatório')
-                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->exporter(ProductExport::class)
-                    ->disabled(fn () => Product::query()->count() === 0)
-            ]);
+            ->bulkActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                    ? [Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ])]
+                    : []
+            )
+            ->headerActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                    ? [
+                        ExportAction::make()
+                            ->label('Exportar Relatório')
+                            ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->exporter(ProductExport::class)
+                            ->disabled(fn () => Product::query()->count() === 0)
+                    ]
+                    : []
+            
+            );
     }
 
     public static function getPages(): array

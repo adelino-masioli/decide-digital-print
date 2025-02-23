@@ -42,8 +42,10 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Gray,
             ])
             ->navigationGroups([
+                'Catálogo',
+                'Vendas',
+                'CRM',
                 'Administração',
-                'Cadastros',
                 'Minha Conta',
             ])
             ->userMenuItems([

@@ -32,7 +32,7 @@ class UserResource extends Resource
 
     protected static ?string $navigationGroup = 'Administração';
 
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 5;
 
     public static function canViewAny(): bool
     {
@@ -587,7 +587,7 @@ class UserResource extends Resource
                     ->label('Meu Perfil')
                     ->url(fn() => static::getUrl('edit', ['record' => $user->id]))
                     ->group('Minha Conta')
-                    ->sort(1),
+                    ->sort(5),
             ];
         }
 

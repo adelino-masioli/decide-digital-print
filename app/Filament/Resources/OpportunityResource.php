@@ -28,6 +28,7 @@ class OpportunityResource extends Resource
     // Adicionando os labels em português
     protected static ?string $modelLabel = 'Oportunidade';
     protected static ?string $pluralModelLabel = 'Oportunidades';
+    protected static ?int $navigationSort = 3; 
 
     public static function form(Form $form): Form
     {
@@ -174,19 +175,26 @@ class OpportunityResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ])
-            ->headerActions([
-                ExportAction::make()
-                    ->label('Exportar Relatório')
-                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->exporter(OpportunityExport::class)
-                    ->disabled(fn () => Opportunity::query()->count() === 0)
-            ]);
+            ->bulkActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                    ? [Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ])]
+                    : []
+            )
+            ->headerActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                    ? [
+                        ExportAction::make()
+                            ->label('Exportar Relatório')
+                            ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->exporter(OpportunityExport::class)
+                            ->disabled(fn () => Opportunity::query()->count() === 0)
+                    ]
+                    : []
+            
+            );
     }
 
     public static function getRelations(): array

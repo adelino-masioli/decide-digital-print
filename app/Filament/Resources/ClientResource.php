@@ -33,6 +33,8 @@ class ClientResource extends Resource
 
     protected static ?string $navigationGroup = 'Administração';
 
+    protected static ?int $navigationSort = 2; 
+
     public static function canViewAny(): bool
     {
         return auth()->user()->can('client.list');
@@ -309,19 +311,26 @@ class ClientResource extends Resource
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ])
-            ->headerActions([
-                ExportAction::make()
-                    ->label('Exportar Relatório')
-                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->exporter(ClientExport::class)
-                    ->disabled(fn () => User::query()->role('client')->count() === 0)
-            ]);
+            ->bulkActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                    ? [Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ])]
+                    : []
+            )
+            ->headerActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                    ? [
+                        ExportAction::make()
+                            ->label('Exportar Relatório')
+                            ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->exporter(ClientExport::class)
+                            ->disabled(fn () => User::query()->role('client')->count() === 0)
+                    ]
+                    : []
+            
+            );
     }
 
     public static function getPages(): array

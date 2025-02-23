@@ -289,19 +289,26 @@ class OrderResource extends Resource
                             ->send();
                     }),
             ])
-            ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
-            ])
-            ->headerActions([
-                ExportAction::make()
-                    ->label('Exportar Relatório')
-                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->exporter(OrderExport::class)
-                    ->disabled(fn () => Order::query()->count() === 0)
-            ]);
+            ->bulkActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                    ? [Tables\Actions\BulkActionGroup::make([
+                        Tables\Actions\DeleteBulkAction::make(),
+                    ])]
+                    : []
+            )
+            ->headerActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                    ? [
+                        ExportAction::make()
+                            ->label('Exportar Relatório')
+                            ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->exporter(OrderExport::class)
+                            ->disabled(fn () => Order::query()->count() === 0)
+                    ]
+                    : []
+            
+            );
     }
 
     public static function getRelations(): array
