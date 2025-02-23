@@ -42,17 +42,26 @@ class AdminPanelProvider extends PanelProvider
                 'gray' => Color::Gray,
             ])
             ->navigationGroups([
-                'Catálogo',
-                'Vendas',
-                'CRM',
-                'Administração',
-                'Minha Conta',
-            ])
-            ->userMenuItems([
-                MenuItem::make()
-                    ->label('Meu Perfil')
-                    ->url(fn () => route('filament.admin.resources.users.edit', ['record' => auth()->id()]))
-                    ->icon('heroicon-o-user'),
+                NavigationGroup::make()
+                    ->label('Catálogo')
+                    ->icon('heroicon-o-squares-2x2')
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('CRM')
+                    ->icon('heroicon-o-users')
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Vendas')
+                    ->icon('heroicon-o-shopping-cart')
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Administração')
+                    ->icon('heroicon-o-cog-6-tooth')
+                    ->collapsed(),
+                NavigationGroup::make()
+                    ->label('Minha Conta')
+                    ->icon('heroicon-o-user')
+                    ->collapsed(),
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->pages([

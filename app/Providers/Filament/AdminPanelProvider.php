@@ -28,6 +28,7 @@ use App\Filament\Widgets\LatestOpportunities;
 use App\Filament\Pages\Auth\Login as FilamentLogin;
 use \App\Http\Middleware\BlockClientAccess;
 use Illuminate\Support\Facades\Blade;
+use Filament\Navigation\NavigationGroup;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -47,6 +48,13 @@ class AdminPanelProvider extends PanelProvider
                 'danger' => Color::Red,
                 'info' => Color::Sky,
                 'gray' => Color::Gray,
+            ])
+            ->navigationGroups([
+                'Catálogo',
+                'Administração',
+                'Vendas',
+                'CRM',
+                'Minha Conta',
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')

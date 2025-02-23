@@ -27,7 +27,7 @@ class QuoteResource extends Resource
     protected static ?string $model = Quote::class;
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
     protected static ?string $navigationGroup = 'Vendas';
-    protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 1;
 
     public static function getModelLabel(): string
     {
