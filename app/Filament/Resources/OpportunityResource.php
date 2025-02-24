@@ -190,10 +190,14 @@ class OpportunityResource extends Resource
                             ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
                             ->icon('heroicon-o-document-arrow-down')
                             ->exporter(OpportunityExport::class)
-                            ->disabled(fn () => Opportunity::query()->count() === 0)
+                            ->disabled(function () {
+                                $user = auth()->user();
+                                return Opportunity::query()
+                                    ->where('tenant_id', $user->tenant_id)
+                                    ->count() === 0;
+                            })
                     ]
                     : []
-            
             );
     }
 

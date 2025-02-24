@@ -280,10 +280,14 @@ class ProductResource extends Resource
                             ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
                             ->icon('heroicon-o-document-arrow-down')
                             ->exporter(ProductExport::class)
-                            ->disabled(fn () => Product::query()->count() === 0)
+                            ->disabled(function () {
+                                $user = auth()->user();
+                                return Product::query()
+                                    ->where('tenant_id', $user->tenant_id)
+                                    ->count() === 0;
+                            })
                     ]
                     : []
-            
             );
     }
 

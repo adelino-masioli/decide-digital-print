@@ -50,8 +50,10 @@ class CategoryResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->where('tenant_id', auth()->user()->tenant_id);
+        $query = parent::getEloquentQuery();
+        
+        // Always filter by tenant_id regardless of user role
+        return $query->where('tenant_id', auth()->user()->tenant_id);
     }
 
     public static function getModelLabel(): string
@@ -74,12 +76,30 @@ class CategoryResource extends Resource
                             ->label('Nome')
                             ->required()
                             ->maxLength(255)
-                            ->live(onBlur: true),
+                            ->live(onBlur: true)
+                            ->afterStateUpdated(function (string $state, Forms\Set $set) {
+                                $slug = Str::slug($state);
+                                
+                                // Check if slug exists for current tenant
+                                $exists = Category::query()
+                                    ->where('tenant_id', auth()->user()->tenant_id)
+                                    ->where('slug', $slug)
+                                    ->exists();
+                                
+                                if ($exists) {
+                                    $slug = $slug . '-' . uniqid();
+                                }
+                                
+                                $set('slug', $slug);
+                            }),
 
                         Forms\Components\TextInput::make('slug')
                             ->label('Slug')
                             ->disabled()
                             ->dehydrated()
+                            ->unique(Category::class, 'slug', fn ($record) => $record, modifyRuleUsing: function ($rule) {
+                                return $rule->where('tenant_id', auth()->user()->tenant_id);
+                            })
                             ->helperText('Gerado automaticamente do nome'),
 
                         Forms\Components\Select::make('parent_id')
@@ -109,6 +129,7 @@ class CategoryResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->modifyQueryUsing(fn (Builder $query) => $query->where('tenant_id', auth()->user()->tenant_id))
             ->columns([
                 Tables\Columns\TextColumn::make('name')
                     ->label('Nome')
@@ -166,7 +187,12 @@ class CategoryResource extends Resource
                     ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
                     ->icon('heroicon-o-document-arrow-down')
                     ->exporter(CategoryExport::class)
-                    ->disabled(fn () => Category::query()->count() === 0)
+                    ->disabled(function () {
+                        $user = auth()->user();
+                        return Category::query()
+                            ->where('tenant_id', $user->tenant_id)
+                            ->count() === 0;
+                    })
             ]);
     }
 
@@ -178,4 +204,4 @@ class CategoryResource extends Resource
             'edit' => Pages\EditCategory::route('/{record}/edit'),
         ];
     }
-} 
+}

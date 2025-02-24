@@ -197,14 +197,23 @@ class SupplyResource extends Resource
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
             ])
-            ->headerActions([
-                ExportAction::make()
-                    ->label('Exportar Relatório')
-                    ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->exporter(SupplyExport::class)
-                    ->disabled(fn () => Supply::query()->count() === 0)
-            ]);
+            ->headerActions(
+                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                    ? [
+                        ExportAction::make()
+                            ->label('Exportar Relatório')
+                            ->color(fn (ExportAction $action) => $action->isDisabled() ? 'gray' : 'success')
+                            ->icon('heroicon-o-document-arrow-down')
+                            ->exporter(SupplyExport::class)
+                            ->disabled(function () {
+                                $user = auth()->user();
+                                return Supply::query()
+                                    ->where('tenant_id', $user->tenant_id)
+                                    ->count() === 0;
+                            })
+                    ]
+                    : []
+            );
     }
 
     public static function getPages(): array

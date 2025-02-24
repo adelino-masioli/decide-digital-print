@@ -18,8 +18,6 @@ class DatabaseSeeder extends Seeder
             RolesAndPermissionsSeeder::class,
             AdminSeeder::class,
             GraphicsSeeder::class,
-            //CategorySeeder::class,
-            //ProductSeeder::class,
             AdminPermissionsSeeder::class,
             ManagerPermissionsSeeder::class,
             OperatorPermissionsSeeder::class,
