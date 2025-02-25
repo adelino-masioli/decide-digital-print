@@ -38,8 +38,44 @@ class QuoteItemsRelationManager extends RelationManager
                         $product = Product::find($state);
                         $set('unit_price', number_format($product->base_price, 2, ',', '.'));
                         $set('total_price', number_format($product->base_price, 2, ',', '.'));
-                        $set('customization_options', $product->customization_options);
-                        $set('file_requirements', $product->file_requirements);
+                        
+                        // Carrega as opções de personalização do produto
+                        if (!empty($product->customization_options)) {
+                            try {
+                                if (is_string($product->customization_options)) {
+                                    $customizationOptions = json_decode($product->customization_options, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($customizationOptions)) {
+                                        $set('customization_options', $customizationOptions);
+                                    }
+                                } else {
+                                    $set('customization_options', $product->customization_options);
+                                }
+                            } catch (\Exception $e) {
+                                // Em caso de erro, deixa em branco
+                                $set('customization_options', []);
+                            }
+                        } else {
+                            $set('customization_options', []);
+                        }
+                        
+                        // Carrega os requisitos de arquivo do produto
+                        if (!empty($product->file_requirements)) {
+                            try {
+                                if (is_string($product->file_requirements)) {
+                                    $fileRequirements = json_decode($product->file_requirements, true);
+                                    if (json_last_error() === JSON_ERROR_NONE && is_array($fileRequirements)) {
+                                        $set('file_requirements', $fileRequirements);
+                                    }
+                                } else {
+                                    $set('file_requirements', $product->file_requirements);
+                                }
+                            } catch (\Exception $e) {
+                                // Em caso de erro, deixa em branco
+                                $set('file_requirements', []);
+                            }
+                        } else {
+                            $set('file_requirements', []);
+                        }
                     }
                 }),
 
@@ -61,21 +97,41 @@ class QuoteItemsRelationManager extends RelationManager
                 ->label('Preço Unitário')
                 ->required()
                 ->reactive()
-                ->mask('999.999.999,99')
+                ->prefix('R$')
+                ->afterStateHydrated(function ($component, $state) {
+                    if (is_numeric($state)) {
+                        $component->state(number_format((float)$state, 2, ',', '.'));
+                    }
+                })
                 ->afterStateUpdated(function ($state, callable $set, $get) {
-                    $unit_price = (float) str_replace(['.', ','], ['', '.'], $state);
-                    $quantity = (float) $get('quantity');
+                    $cleanState = preg_replace('/[^\d,]/', '', $state);
+                    $cleanState = str_replace(',', '.', $cleanState);
+                    $unit_price = (float) $cleanState;
+                    
+                    $quantity = (int) $get('quantity');
                     $total = $quantity * $unit_price;
+                    
                     $set('total_price', number_format($total, 2, ',', '.'));
                 })
-                ->dehydrateStateUsing(fn ($state) => (float) str_replace(['.', ','], ['', '.'], $state)),
+                ->dehydrateStateUsing(function ($state) {
+                    $cleanState = preg_replace('/[^\d,]/', '', $state);
+                    return (float) str_replace(',', '.', $cleanState);
+                }),
 
             Forms\Components\TextInput::make('total_price')
                 ->label('Preço Total')
                 ->disabled()
                 ->dehydrated()
-                ->mask('999.999.999,99')
-                ->dehydrateStateUsing(fn ($state) => (float) str_replace(['.', ','], ['', '.'], $state)),
+                ->prefix('R$')
+                ->afterStateHydrated(function ($component, $state) {
+                    if (is_numeric($state)) {
+                        $component->state(number_format((float)$state, 2, ',', '.'));
+                    }
+                })
+                ->dehydrateStateUsing(function ($state) {
+                    $cleanState = preg_replace('/[^\d,]/', '', $state);
+                    return (float) str_replace(',', '.', $cleanState);
+                }),
 
             Forms\Components\KeyValue::make('customization_options')
                 ->label('Opções de Personalização')
@@ -88,10 +144,24 @@ class QuoteItemsRelationManager extends RelationManager
                 ->addActionLabel('Adicionar Opção')
                 ->afterStateHydrated(function ($component, $state) {
                     if (is_string($state)) {
-                        $component->state(json_decode($state, true) ?: null);
+                        try {
+                            $decoded = json_decode($state, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                $component->state($decoded);
+                            } else {
+                                $component->state([]);
+                            }
+                        } catch (\Exception $e) {
+                            $component->state([]);
+                        }
                     }
                 })
-                ->dehydrateStateUsing(fn ($state) => $state ? json_encode($state) : null),
+                ->dehydrateStateUsing(function ($state) {
+                    if (empty($state)) {
+                        return null;
+                    }
+                    return json_encode($state);
+                }),
 
             Forms\Components\KeyValue::make('file_requirements')
                 ->label('Requisitos do Arquivo')
@@ -104,10 +174,24 @@ class QuoteItemsRelationManager extends RelationManager
                 ->addActionLabel('Adicionar Requisito')
                 ->afterStateHydrated(function ($component, $state) {
                     if (is_string($state)) {
-                        $component->state(json_decode($state, true) ?: null);
+                        try {
+                            $decoded = json_decode($state, true);
+                            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                $component->state($decoded);
+                            } else {
+                                $component->state([]);
+                            }
+                        } catch (\Exception $e) {
+                            $component->state([]);
+                        }
                     }
                 })
-                ->dehydrateStateUsing(fn ($state) => $state ? json_encode($state) : null),
+                ->dehydrateStateUsing(function ($state) {
+                    if (empty($state)) {
+                        return null;
+                    }
+                    return json_encode($state);
+                }),
         ]);
     }
 

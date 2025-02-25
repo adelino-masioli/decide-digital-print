@@ -182,14 +182,54 @@ class ProductResource extends Resource
                             ->keyLabel('Opção')
                             ->valueLabel('Valores')
                             ->addable()
-                            ->reorderable(),
+                            ->reorderable()
+                            ->afterStateHydrated(function ($component, $state) {
+                                if (is_string($state)) {
+                                    try {
+                                        $decoded = json_decode($state, true);
+                                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                            $component->state($decoded);
+                                        } else {
+                                            $component->state([]);
+                                        }
+                                    } catch (\Exception $e) {
+                                        $component->state([]);
+                                    }
+                                }
+                            })
+                            ->dehydrateStateUsing(function ($state) {
+                                if (empty($state)) {
+                                    return null;
+                                }
+                                return json_encode($state);
+                            }),
 
                         Forms\Components\KeyValue::make('file_requirements')
                             ->label('Requisitos do Arquivo')
                             ->keyLabel('Requisito')
                             ->valueLabel('Especificação')
                             ->addable()
-                            ->reorderable(),
+                            ->reorderable()
+                            ->afterStateHydrated(function ($component, $state) {
+                                if (is_string($state)) {
+                                    try {
+                                        $decoded = json_decode($state, true);
+                                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                                            $component->state($decoded);
+                                        } else {
+                                            $component->state([]);
+                                        }
+                                    } catch (\Exception $e) {
+                                        $component->state([]);
+                                    }
+                                }
+                            })
+                            ->dehydrateStateUsing(function ($state) {
+                                if (empty($state)) {
+                                    return null;
+                                }
+                                return json_encode($state);
+                            }),
                     ])
                     ->columns(2),
             ]);
