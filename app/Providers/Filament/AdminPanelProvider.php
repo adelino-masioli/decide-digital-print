@@ -85,8 +85,120 @@ class AdminPanelProvider extends PanelProvider
             ->maxContentWidth('full')
             ->sidebarCollapsibleOnDesktop()
             ->renderHook(
+                'panels::head.end',
+                fn () => '
+                <style>
+                    /* Estilo para o título centralizado */
+                    .fi-topbar .fi-topbar-content {
+                        position: relative;
+                    }
+                    
+                    #decide-digital-title {
+                        position: absolute;
+                        left: 50%;
+                        top: 50%;
+                        transform: translate(-50%, -50%);
+                        font-weight: bold;
+                        font-size: 1.25rem;
+                        color: var(--primary-600);
+                        display: none;
+                        z-index: 50;
+                    }
+                    
+                    /* Mostrar o título quando a sidebar estiver recolhida */
+                    .fi-sidebar-collapsed #decide-digital-title,
+                    [data-sidebar-collapsed="true"] ~ * #decide-digital-title,
+                    .fi-sidebar[aria-expanded="false"] ~ * #decide-digital-title {
+                        display: block;
+                    }
+                </style>
+                '
+            )
+            ->renderHook(
+                'panels::topbar.start',
+                fn () => '<div id="decide-digital-title"><a href="/admin" title="Decide Digital - Print">Decide Digital - Print</a></div>'
+            )
+            ->renderHook(
                 'panels::body.end',
-                fn () => view('components.welcome-modal')
+                fn () => view('components.welcome-modal') . '
+                <script>
+                    document.addEventListener("DOMContentLoaded", function() {
+                        // Verificar se o elemento existe
+                        var title = document.getElementById("decide-digital-title");
+                        if (!title) {
+                            return;
+                        }
+                        
+                        // Função para verificar o estado da sidebar
+                        function checkSidebarState() {
+                            // Verificar diferentes maneiras que o Filament pode marcar a sidebar como recolhida
+                            var sidebar = document.querySelector(".fi-sidebar");
+                            if (!sidebar) {
+                                return;
+                            }
+                            
+                            var isCollapsed = false;
+                            
+                            // Verificar atributo aria-expanded
+                            if (sidebar.getAttribute("aria-expanded") === "false") {
+                                isCollapsed = true;
+                            }
+                            
+                            // Verificar atributo data-sidebar-collapsed
+                            var dataSidebarCollapsed = document.querySelector("[data-sidebar-collapsed=\'true\']");
+                            if (dataSidebarCollapsed) {
+                                isCollapsed = true;
+                            }
+                            
+                            // Verificar classe
+                            var sidebarCollapsedElement = document.querySelector(".fi-sidebar-collapsed");
+                            if (sidebarCollapsedElement) {
+                                isCollapsed = true;
+                            }
+                            
+                            // Verificar largura da sidebar como último recurso
+                            var sidebarWidth = sidebar.offsetWidth;
+                            if (sidebarWidth < 100) {
+                                isCollapsed = true;
+                            }
+                            
+                            if (isCollapsed) {
+                                title.style.display = "block";
+                            } else {
+                                title.style.display = "none";
+                            }
+                        }
+                        
+                        // Verificar estado inicial após um pequeno delay para garantir que tudo foi carregado
+                        setTimeout(checkSidebarState, 10);
+                        
+                        // Observar mudanças na sidebar
+                        var sidebar = document.querySelector(".fi-sidebar");
+                        if (sidebar) {
+                            var observer = new MutationObserver(function(mutations) {
+                                checkSidebarState();
+                            });
+                            
+                            observer.observe(sidebar, { 
+                                attributes: true, 
+                                attributeFilter: ["class", "aria-expanded", "data-sidebar-collapsed"],
+                                subtree: false
+                            });
+                        }
+                        
+                        // Adicionar listener para cliques no botão de toggle da sidebar
+                        document.addEventListener("click", function(e) {
+                            var toggleButton = e.target.closest("[data-collapse-sidebar-button]");
+                            if (toggleButton) {
+                                setTimeout(checkSidebarState, 200);
+                            }
+                        });
+                        
+                        // Verificar periodicamente (como fallback)
+                        setInterval(checkSidebarState, 200);
+                    });
+                </script>
+                '
             );
     }
 }
