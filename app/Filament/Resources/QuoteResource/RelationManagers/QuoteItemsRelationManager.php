@@ -79,15 +79,35 @@ class QuoteItemsRelationManager extends RelationManager
 
             Forms\Components\KeyValue::make('customization_options')
                 ->label('Opções de Personalização')
+                ->nullable()
+                ->default(null)
+                ->columnSpan('full')
                 ->keyLabel('Opção')
-                ->valueLabel('Valor')
-                ->reorderable(),
+                ->valueLabel('Descrição')
+                ->reorderable()
+                ->addActionLabel('Adicionar Opção')
+                ->afterStateHydrated(function ($component, $state) {
+                    if (is_string($state)) {
+                        $component->state(json_decode($state, true) ?: null);
+                    }
+                })
+                ->dehydrateStateUsing(fn ($state) => $state ? json_encode($state) : null),
 
             Forms\Components\KeyValue::make('file_requirements')
                 ->label('Requisitos do Arquivo')
+                ->nullable()
+                ->default(null)
+                ->columnSpan('full')
                 ->keyLabel('Requisito')
-                ->valueLabel('Especificação')
-                ->reorderable(),
+                ->valueLabel('Descrição')
+                ->reorderable()
+                ->addActionLabel('Adicionar Requisito')
+                ->afterStateHydrated(function ($component, $state) {
+                    if (is_string($state)) {
+                        $component->state(json_decode($state, true) ?: null);
+                    }
+                })
+                ->dehydrateStateUsing(fn ($state) => $state ? json_encode($state) : null),
         ]);
     }
 

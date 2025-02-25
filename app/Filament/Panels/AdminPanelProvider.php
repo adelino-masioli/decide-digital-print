@@ -35,11 +35,11 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
                 'secondary' => Color::Slate,
-                'success' => Color::Emerald,
+                'success' => Color::Green,
                 'warning' => Color::Orange,
                 'danger' => Color::Red,
                 'info' => Color::Sky,
-                'gray' => Color::Gray,
+                'gray' => Color::Gray
             ])
             ->navigationGroups([
                 NavigationGroup::make()

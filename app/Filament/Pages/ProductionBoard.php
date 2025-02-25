@@ -17,6 +17,7 @@ use Filament\Actions\StaticAction;
 use Filament\Support\Facades\FilamentView;
 use Filament\Support\Enums\ActionSize;
 use Filament\Support\Enums\MaxWidth;
+use Illuminate\Support\Facades\Auth;
 
 class ProductionBoard extends Page implements HasActions
 {
@@ -59,11 +60,11 @@ class ProductionBoard extends Page implements HasActions
 
     public function getViewData(): array
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         $orders = Order::query()
-            ->when(!$user->hasRole('super-admin'), function ($query) use ($user) {
-                return $query->where('tenant_id', $user->getTenantId());
+            ->when($user && method_exists($user, 'hasRole') && !$user->hasRole('super-admin'), function ($query) use ($user) {
+                return $query->where('tenant_id', method_exists($user, 'getTenantId') ? $user->getTenantId() : null);
             })
             ->when($this->search, function ($query) {
                 return $query->where(function ($query) {
@@ -120,15 +121,16 @@ class ProductionBoard extends Page implements HasActions
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasAnyRole(['tenant-admin', 'manager', 'operator']);
+        $user = Auth::user();
+        return $user && method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['tenant-admin', 'manager', 'operator']);
     }
 
     public function getStatusColor(string $status): string
     {
         return match ($status) {
-            Order::STATUS_PROCESSING => 'border-primary-500',
-            Order::STATUS_IN_PRODUCTION => 'border-primary-500',
-            Order::STATUS_COMPLETED => 'border-primary-500',
+            Order::STATUS_PROCESSING => 'border-orange-500',
+            Order::STATUS_IN_PRODUCTION => 'border-blue-500',
+            Order::STATUS_COMPLETED => 'border-green-500',
             default => 'border-gray-500',
         };
     }
@@ -141,7 +143,7 @@ class ProductionBoard extends Page implements HasActions
                 'color' => 'warning'
             ],
             Order::STATUS_IN_PRODUCTION => [
-                'icon' => 'heroicon-o-cog',
+                'icon' => 'heroicon-o-cog-6-tooth',
                 'color' => 'primary'
             ],
             Order::STATUS_COMPLETED => [
@@ -152,6 +154,26 @@ class ProductionBoard extends Page implements HasActions
                 'icon' => 'heroicon-o-document',
                 'color' => 'gray'
             ],
+        };
+    }
+
+    public function getStatusBgColor(string $status): string
+    {
+        return match ($status) {
+            Order::STATUS_PROCESSING => 'bg-orange-50',
+            Order::STATUS_IN_PRODUCTION => 'bg-blue-50',
+            Order::STATUS_COMPLETED => 'bg-green-50',
+            default => 'bg-gray-50',
+        };
+    }
+
+    public function getStatusTextColor(string $status): string
+    {
+        return match ($status) {
+            Order::STATUS_PROCESSING => 'text-orange-700',
+            Order::STATUS_IN_PRODUCTION => 'text-blue-700',
+            Order::STATUS_COMPLETED => 'text-green-700',
+            default => 'text-gray-700',
         };
     }
 
