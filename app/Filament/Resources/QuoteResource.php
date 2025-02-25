@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\QuoteMail;
 use App\Filament\Exports\QuoteExport;
 use Filament\Tables\Actions\ExportAction;
+use Illuminate\Support\Facades\Auth;
 
 class QuoteResource extends Resource
 {
@@ -257,43 +258,14 @@ class QuoteResource extends Resource
 
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-                Action::make('pdf')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->label('PDF')
-                    ->action(function (Quote $record) {
-                        $pdf = Pdf::loadView('pdf.quote', ['quote' => $record]);
-                        return response()->streamDownload(
-                            fn () => print($pdf->output()),
-                            "orcamento_{$record->id}.pdf"
-                        );
-                    }),
-                
-                Action::make('email')
-                    ->icon('heroicon-o-envelope')
-                    ->label('Enviar Email')
-                    ->form([
-                        Forms\Components\TextInput::make('email')
-                            ->label('Email')
-                            ->email()
-                            ->required(),
-                    ])
-                    ->action(function (Quote $record, array $data) {
-                        $pdf = Pdf::loadView('pdf.quote', ['quote' => $record]);
-                        $pdfPath = storage_path("app/public/orcamento_{$record->id}.pdf");
-                        $pdf->save($pdfPath);
-
-                        Mail::to($data['email'])->send(new QuoteMail($record, $pdfPath));
-
-                        unlink($pdfPath);
-
-                        Notification::make()
-                            ->title('Email enviado com sucesso!')
-                            ->success()
-                            ->send();
-                    }),
+                Action::make('preview')
+                    ->icon('heroicon-o-eye')
+                    ->label('Visualizar')
+                    ->color('info')
+                    ->url(fn (Quote $record) => route('filament.admin.resources.quotes.preview', $record)),
             ])
             ->bulkActions(
-                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                Auth::user()->hasAnyRole(['manager', 'tenant-admin']) 
                     ? [Tables\Actions\BulkActionGroup::make([
                         Tables\Actions\DeleteBulkAction::make(),
                     ])]
@@ -331,13 +303,14 @@ class QuoteResource extends Resource
             'index' => Pages\ListQuotes::route('/'),
             'create' => Pages\CreateQuote::route('/create'),
             'edit' => Pages\EditQuote::route('/{record}/edit'),
+            'preview' => Pages\PreviewQuote::route('/{record}/preview'),
         ];
     }
 
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
-        $user = auth()->user();
+        $user = Auth::user();
 
         if ($user->hasRole('super-admin')) {
             return $query;
@@ -348,21 +321,21 @@ class QuoteResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('quote.list');
+        return Auth::user()->can('quote.list');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('quote.create');
+        return Auth::user()->can('quote.create');
     }
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()->can('quote.edit');
+        return Auth::user()->can('quote.edit');
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()->can('quote.delete');
+        return Auth::user()->can('quote.delete');
     }
 }

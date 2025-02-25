@@ -19,6 +19,7 @@ use Filament\Notifications\Notification;
 use App\Filament\Exports\OrderExport;
 use Filament\Tables\Actions\ExportAction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class OrderResource extends Resource
 {
@@ -253,51 +254,22 @@ class OrderResource extends Resource
                     }),
 
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\ViewAction::make(),
-                Action::make('pdf')
-                    ->icon('heroicon-o-document-arrow-down')
-                    ->label('PDF')
-                    ->action(function (Order $record) {
-                        $pdf = Pdf::loadView('pdf.order', ['order' => $record]);
-                        return response()->streamDownload(
-                            fn () => print($pdf->output()),
-                            "pedido_{$record->id}.pdf"
-                        );
-                    }),
-                
-                Action::make('email')
-                    ->icon('heroicon-o-envelope')
-                    ->label('Enviar Email')
-                    ->form([
-                        Forms\Components\TextInput::make('email')
-                            ->label('Email')
-                            ->email()
-                            ->required(),
-                    ])
-                    ->action(function (Order $record, array $data) {
-                        $pdf = Pdf::loadView('pdf.order', ['order' => $record]);
-                        $pdfPath = storage_path("app/public/pedido_{$record->id}.pdf");
-                        $pdf->save($pdfPath);
-
-                        Mail::to($data['email'])->send(new OrderMail($record, $pdfPath));
-
-                        unlink($pdfPath);
-
-                        Notification::make()
-                            ->title('Email enviado com sucesso!')
-                            ->success()
-                            ->send();
-                    }),
+                Tables\Actions\Action::make('preview')
+                    ->label('Visualizar')
+                    ->color('info')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (Order $record): string => static::getUrl('preview', ['record' => $record]))
+                    ->openUrlInNewTab(false),
             ])
             ->bulkActions(
-                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                Auth::user()->hasAnyRole(['manager', 'tenant-admin']) 
                     ? [Tables\Actions\BulkActionGroup::make([
                         Tables\Actions\DeleteBulkAction::make(),
                     ])]
                     : []
             )
             ->headerActions(
-                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                Auth::user()->hasAnyRole(['manager', 'tenant-admin'])
                     ? [
                         ExportAction::make()
                             ->label('Exportar Relatório')
@@ -323,14 +295,14 @@ class OrderResource extends Resource
         return [
             'index' => Pages\ListOrders::route('/'),
             'edit' => Pages\EditOrder::route('/{record}/edit'),
-            'view' => Pages\ViewOrder::route('/{record}'),
+            'preview' => Pages\PreviewOrder::route('/{record}/preview'),
         ];
     }
 
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
-        $user = auth()->user();
+        $user = Auth::user();
 
         if ($user->hasRole('tenant-admin')) {
             return $query;
@@ -341,21 +313,46 @@ class OrderResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('order.list');
-    }
-
-    public static function canCreate(): bool
-    {
-        return auth()->user()->can('order.create');
+        return Auth::user()->can('order.list');
     }
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()->can('order.edit');
+        return Auth::user()->can('order.edit');
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()->can('order.delete');
+        return Auth::user()->can('order.delete');
+    }
+
+    public static function getTableActions(): array
+    {
+        return [
+            Tables\Actions\Action::make('preview')
+                ->label('Visualizar')
+                ->icon('heroicon-o-eye')
+                ->url(fn (Order $record): string => static::getUrl('preview', ['record' => $record]))
+                ->openUrlInNewTab(false),
+            Tables\Actions\Action::make('view')
+                ->label('Detalhes')
+                ->icon('heroicon-o-document-text')
+                ->url(fn (Order $record): string => static::getUrl('view', ['record' => $record])),
+            Tables\Actions\EditAction::make(),
+            Action::make('markAsPaid')
+                ->label('Marcar como Pago')
+                ->icon('heroicon-o-currency-dollar')
+                ->color('success')
+                ->requiresConfirmation()
+                ->visible(fn ($record) => $record->payment_status === 'pending')
+                ->action(function (Order $record) {
+                    $record->markAsPaid();
+                    
+                    Notification::make()
+                        ->success()
+                        ->title('Pedido marcado como pago!')
+                        ->send();
+                }),
+        ];
     }
 } 
