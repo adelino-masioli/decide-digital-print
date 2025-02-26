@@ -90,6 +90,30 @@ class OrderResource extends Resource
                                 ->label('Valor Total')
                                 ->disabled()
                                 ->prefix('R$'),
+
+                            Forms\Components\DatePicker::make('created_at')
+                                ->label('Data da Venda')
+                                ->default(now()->addDays(7))
+                                ->displayFormat('d/m/Y | H:i:s')
+                                ->format('Y-m-d H:i:s')
+                                ->locale('pt_BR')
+                                ->closeOnDateSelection()
+                                ->native(false)
+                                ->icon('heroicon-o-calendar')
+                                ->prefixIcon('heroicon-o-calendar')
+                                ->disabled(),
+
+                            Forms\Components\DatePicker::make('updated_at')
+                                ->label('Data da Atualização')
+                                ->default(now()->addDays(7))
+                                ->displayFormat('d/m/Y | H:i:s')
+                                ->format('Y-m-d H:i:s')
+                                ->locale('pt_BR')
+                                ->closeOnDateSelection()
+                                ->native(false)
+                                ->icon('heroicon-o-calendar')
+                                ->prefixIcon('heroicon-o-calendar')
+                                ->disabled(),
                         ]),
                     Forms\Components\Textarea::make('notes')
                         ->label('Observações')

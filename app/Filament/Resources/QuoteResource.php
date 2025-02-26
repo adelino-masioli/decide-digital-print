@@ -61,6 +61,13 @@ class QuoteResource extends Resource
                             Forms\Components\DatePicker::make('valid_until')
                                 ->label('Válido até')
                                 ->default(now()->addDays(7))
+                                ->displayFormat('d/m/Y')
+                                ->format('Y-m-d')
+                                ->locale('pt_BR')
+                                ->closeOnDateSelection()
+                                ->native(false)
+                                ->icon('heroicon-o-calendar')
+                                ->prefixIcon('heroicon-o-calendar')
                                 ->required(),
 
                             Forms\Components\Select::make('status')
