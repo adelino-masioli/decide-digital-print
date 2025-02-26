@@ -72,6 +72,7 @@ class InteractionsRelationManager extends RelationManager
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('type')
+                    ->label('Tipo')
                     ->badge()
                     ->colors([
                         'warning' => 'call',
@@ -87,23 +88,28 @@ class InteractionsRelationManager extends RelationManager
                     }),
                     
                 Tables\Columns\TextColumn::make('description')
+                    ->label('Descrição')
                     ->limit(50),
                     
                 Tables\Columns\TextColumn::make('scheduled_at')
+                    ->label('Agendado para')
                     ->dateTime()
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('completed_at')
+                    ->label('Concluído em')
                     ->dateTime()
                     ->sortable(),
                     
                 Tables\Columns\TextColumn::make('created_at')
+                    ->label('Criado em')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('type')
+                    ->label('Tipo')
                     ->options([
                         'call' => 'Ligação',
                         'email' => 'E-mail',

@@ -25,7 +25,17 @@ class LatestOpportunities extends BaseWidget
                     ->label('Título')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('status')
-                    ->label('Status'),
+                    ->label('Status')
+                    ->formatStateUsing(function (string $state): string {
+                        return match ($state) {
+                            'lead' => 'Primeiro Contato',
+                            'negotiation' => 'Em Orçamento',
+                            'proposal' => 'Orçamento Enviado',
+                            'won' => 'Pedido Fechado',
+                            'lost' => 'Não Aprovado',
+                            default => $state,
+                        };
+                    }),
                 Tables\Columns\TextColumn::make('value')
                     ->label('Valor')
                     ->money('BRL'),

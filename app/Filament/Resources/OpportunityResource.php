@@ -18,6 +18,8 @@ use Filament\Forms\Set;
 use App\Filament\Exports\OpportunityExport;
 use Filament\Tables\Actions\ExportAction;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Gate;
 
 class OpportunityResource extends Resource
 {
@@ -51,7 +53,7 @@ class OpportunityResource extends Resource
                                 'client',
                                 'name',
                                 fn (Builder $query) => $query
-                                    ->where('tenant_id', auth()->user()->tenant_id)
+                                    ->where('tenant_id', Auth::user()->tenant_id)
                                     ->whereHas('roles', fn ($q) => $q->where('name', 'client'))
                             )
                             ->searchable()
@@ -64,7 +66,7 @@ class OpportunityResource extends Resource
                                 'responsible',
                                 'name',
                                 fn (Builder $query) => $query
-                                    ->where('tenant_id', auth()->user()->tenant_id)
+                                    ->where('tenant_id', Auth::user()->tenant_id)
                                     ->whereHas('roles', fn ($q) => $q->whereIn('name', ['manager', 'operator']))
                             )
                             ->searchable()
@@ -176,14 +178,14 @@ class OpportunityResource extends Resource
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions(
-                auth()->user()->hasAnyRole(['manager', 'tenant-admin']) 
+                Gate::check('manage-opportunities') 
                     ? [Tables\Actions\BulkActionGroup::make([
                         Tables\Actions\DeleteBulkAction::make(),
                     ])]
                     : []
             )
             ->headerActions(
-                auth()->user()->hasAnyRole(['manager', 'tenant-admin'])
+                Gate::check('manage-opportunities')
                     ? [
                         ExportAction::make()
                             ->label('Exportar Relatório')
@@ -191,7 +193,7 @@ class OpportunityResource extends Resource
                             ->icon('heroicon-o-document-arrow-down')
                             ->exporter(OpportunityExport::class)
                             ->disabled(function () {
-                                $user = auth()->user();
+                                $user = Auth::user();
                                 return Opportunity::query()
                                     ->where('tenant_id', $user->tenant_id)
                                     ->count() === 0;
@@ -220,21 +222,21 @@ class OpportunityResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->can('opportunity.list');
+        return Gate::check('opportunity.list');
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->can('opportunity.create');
+        return Gate::check('opportunity.create');
     }
 
     public static function canEdit(Model $record): bool
     {
-        return auth()->user()->can('opportunity.edit');
+        return Gate::check('opportunity.edit');
     }
 
     public static function canDelete(Model $record): bool
     {
-        return auth()->user()->can('opportunity.delete');
+        return Gate::check('opportunity.delete');
     }
 } 

@@ -9,6 +9,7 @@ use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Auth;
 
 class QuoteItemsRelationManager extends RelationManager
 {
@@ -17,7 +18,7 @@ class QuoteItemsRelationManager extends RelationManager
 
     public function form(Form $form): Form
     {
-        $user = auth()->user();
+        $user = Auth::user();
 
         return $form->schema([
             Forms\Components\Select::make('product_id')
@@ -25,9 +26,7 @@ class QuoteItemsRelationManager extends RelationManager
                 ->relationship(
                     'product',
                     'name',
-                    fn (Builder $query) => $user->hasRole('super-admin') 
-                        ? $query 
-                        : $query->where('tenant_id', $user->getTenantId())
+                    fn (Builder $query) => $query->where('tenant_id', $user->tenant_id)
                 )
                 ->searchable()
                 ->preload()
@@ -36,45 +35,47 @@ class QuoteItemsRelationManager extends RelationManager
                 ->afterStateUpdated(function ($state, callable $set) {
                     if ($state) {
                         $product = Product::find($state);
-                        $set('unit_price', number_format($product->base_price, 2, ',', '.'));
-                        $set('total_price', number_format($product->base_price, 2, ',', '.'));
-                        
-                        // Carrega as opções de personalização do produto
-                        if (!empty($product->customization_options)) {
-                            try {
-                                if (is_string($product->customization_options)) {
-                                    $customizationOptions = json_decode($product->customization_options, true);
-                                    if (json_last_error() === JSON_ERROR_NONE && is_array($customizationOptions)) {
-                                        $set('customization_options', $customizationOptions);
+                        if ($product) {
+                            $set('unit_price', number_format($product->base_price, 2, ',', '.'));
+                            $set('total_price', number_format($product->base_price, 2, ',', '.'));
+                            
+                            // Carrega as opções de personalização do produto
+                            if (!empty($product->customization_options)) {
+                                try {
+                                    if (is_string($product->customization_options)) {
+                                        $customizationOptions = json_decode($product->customization_options, true);
+                                        if (json_last_error() === JSON_ERROR_NONE && is_array($customizationOptions)) {
+                                            $set('customization_options', $customizationOptions);
+                                        }
+                                    } else {
+                                        $set('customization_options', $product->customization_options);
                                     }
-                                } else {
-                                    $set('customization_options', $product->customization_options);
+                                } catch (\Exception $e) {
+                                    // Em caso de erro, deixa em branco
+                                    $set('customization_options', []);
                                 }
-                            } catch (\Exception $e) {
-                                // Em caso de erro, deixa em branco
+                            } else {
                                 $set('customization_options', []);
                             }
-                        } else {
-                            $set('customization_options', []);
-                        }
-                        
-                        // Carrega os requisitos de arquivo do produto
-                        if (!empty($product->file_requirements)) {
-                            try {
-                                if (is_string($product->file_requirements)) {
-                                    $fileRequirements = json_decode($product->file_requirements, true);
-                                    if (json_last_error() === JSON_ERROR_NONE && is_array($fileRequirements)) {
-                                        $set('file_requirements', $fileRequirements);
+                            
+                            // Carrega os requisitos de arquivo do produto
+                            if (!empty($product->file_requirements)) {
+                                try {
+                                    if (is_string($product->file_requirements)) {
+                                        $fileRequirements = json_decode($product->file_requirements, true);
+                                        if (json_last_error() === JSON_ERROR_NONE && is_array($fileRequirements)) {
+                                            $set('file_requirements', $fileRequirements);
+                                        }
+                                    } else {
+                                        $set('file_requirements', $product->file_requirements);
                                     }
-                                } else {
-                                    $set('file_requirements', $product->file_requirements);
+                                } catch (\Exception $e) {
+                                    // Em caso de erro, deixa em branco
+                                    $set('file_requirements', []);
                                 }
-                            } catch (\Exception $e) {
-                                // Em caso de erro, deixa em branco
+                            } else {
                                 $set('file_requirements', []);
                             }
-                        } else {
-                            $set('file_requirements', []);
                         }
                     }
                 }),

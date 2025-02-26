@@ -29,7 +29,7 @@ use App\Filament\Pages\Auth\Login as FilamentLogin;
 use \App\Http\Middleware\BlockClientAccess;
 use Illuminate\Support\Facades\Blade;
 use Filament\Navigation\NavigationGroup;
-
+use Filament\Enums\ThemeMode;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -38,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->defaultThemeMode(ThemeMode::Light)
             ->login(FilamentLogin::class)
             ->registration(Register::class)
             ->colors([

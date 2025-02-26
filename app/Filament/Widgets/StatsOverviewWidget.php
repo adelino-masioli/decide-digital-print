@@ -22,7 +22,7 @@ class StatsOverviewWidget extends BaseWidget
                 ->icon('heroicon-o-briefcase')
                 ->color('success'),
 
-            Stat::make('Oportunidades Abertas', Opportunity::where('status', 'open')->count())
+            Stat::make('Oportunidades Abertas', Opportunity::where('status', 'lead')->count())
                 ->description('Oportunidades em negociação')
                 ->icon('heroicon-o-currency-dollar')
                 ->color('warning'),

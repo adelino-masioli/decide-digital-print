@@ -86,6 +86,9 @@ return [
 
     'livewire_loading_delay' => 'default',
 
+
+    'default_theme' => 'light',
+
     'widgets' => [
         App\Filament\Widgets\StatsOverviewWidget::class,
         App\Filament\Widgets\OpportunitiesChart::class,
